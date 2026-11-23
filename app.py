@@ -10,7 +10,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.units import mm
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 
 try:
     import psycopg2
@@ -40,7 +40,6 @@ KEY_FILE = os.path.join(BASE, 'secret.key')
 app = Flask(__name__)
 
 def load_secret_key():
-    # Use environment variable on Vercel or fallback key if file system is read-only
     if os.environ.get("SECRET_KEY"):
         return os.environ.get("SECRET_KEY")
     try:
@@ -55,7 +54,7 @@ def load_secret_key():
 app.secret_key = load_secret_key()
 
 class DualRow(dict):
-    """Supports both row['column'] and row[0] indexing for SQLite and PostgreSQL."""
+    """Supports both row['col'] and row[0] indexing for SQLite and PostgreSQL."""
     def __init__(self, mapping):
         super().__init__(mapping)
         self._vals = list(mapping.values())
@@ -69,12 +68,9 @@ class PgCursorWrapper:
         self._cur = cur
         self.lastrowid = None
     def execute(self, sql, params=()):
-        pg_sql = sql.replace('?', '%s').replace('COLLATE NOCASE', '')
-        pg_sql = re.sub(
-            r'CAST\(TRIM\(roll_no\) AS INTEGER\)',
-            "NULLIF(regexp_replace(roll_no, '[^0-9]', '', 'g'), '')::INTEGER",
-            pg_sql
-        )
+        pg_sql = sql.replace('?', '%s')
+        pg_sql = pg_sql.replace('COLLATE NOCASE', '')
+        pg_sql = re.sub(r'CAST\(TRIM\(roll_no\) AS INTEGER\)', "NULLIF(regexp_replace(roll_no, '[^0-9]', '', 'g'), '')::INTEGER", pg_sql)
         is_insert = pg_sql.strip().upper().startswith('INSERT INTO')
         if is_insert and 'RETURNING' not in pg_sql.upper():
             pg_sql = pg_sql.rstrip().rstrip(';') + ' RETURNING id'
@@ -134,28 +130,23 @@ def init():
             usn TEXT
         )''')
         c.commit()
-        # One-time migration: copy existing users and 36 sample students from local database.db into Neon if empty
         if os.path.exists(LOCAL_DB):
             sc = sqlite3.connect(LOCAL_DB)
             sc.row_factory = sqlite3.Row
             if c.execute('SELECT COUNT(*) FROM users').fetchone()[0] == 0:
                 for u in sc.execute('SELECT name, username, password FROM users').fetchall():
-                    c.execute(
-                        'INSERT INTO users(name, username, password) VALUES(?,?,?) ON CONFLICT DO NOTHING',
-                        (u['name'], u['username'], u['password'])
-                    )
+                    c.execute('INSERT INTO users(name, username, password) VALUES(?,?,?) ON CONFLICT DO NOTHING',
+                              (u['name'], u['username'], u['password']))
             if c.execute('SELECT COUNT(*) FROM students').fetchone()[0] == 0:
                 for s in sc.execute('SELECT * FROM students ORDER BY id ASC').fetchall():
-                    sd = dict(s)
-                    c.execute(
-                        '''INSERT INTO students(name,roll_no,department,attendance,study_hours,assignment_score,previous_average,prediction,math_marks,physics_marks,cs_marks,subject_marks,usn)
-                           VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)''',
-                        (sd.get('name'), sd.get('roll_no'), sd.get('department'),
-                         sd.get('attendance'), sd.get('study_hours'), sd.get('assignment_score'),
-                         sd.get('previous_average'), sd.get('prediction'),
-                         sd.get('math_marks', 0), sd.get('physics_marks', 0), sd.get('cs_marks', 0),
-                         sd.get('subject_marks', '{}'), sd.get('usn', ''))
-                    )
+                    s_dict = dict(s)
+                    c.execute('''INSERT INTO students(name,roll_no,department,attendance,study_hours,assignment_score,previous_average,prediction,math_marks,physics_marks,cs_marks,subject_marks,usn)
+                                 VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+                              (s_dict.get('name'), s_dict.get('roll_no'), s_dict.get('department'),
+                               s_dict.get('attendance'), s_dict.get('study_hours'), s_dict.get('assignment_score'),
+                               s_dict.get('previous_average'), s_dict.get('prediction'),
+                               s_dict.get('math_marks', 0), s_dict.get('physics_marks', 0), s_dict.get('cs_marks', 0),
+                               s_dict.get('subject_marks', '{}'), s_dict.get('usn', '')))
             sc.close()
             c.commit()
         c.close()
@@ -228,3 +219,8 @@ def form_data():
         mark=float(mark)
         if not (0<=mark<=100): raise ValueError
         cleaned[subject]=mark
+    missing=[sub for sub in SUBJECT_CATALOG if sub not in cleaned]
+    electives=[sub for sub in OPEN_ELECTIVES if sub in cleaned]
+    if missing:
+        raise ValueError('Please enter marks for all 5 compulsory subjects before prediction.')
+    if len(electives) != 1:
