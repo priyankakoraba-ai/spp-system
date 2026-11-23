@@ -12,9 +12,20 @@ from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.units import mm
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether
 
-BASE=os.path.dirname(os.path.abspath(__file__))
-DB=os.path.join(BASE,'database.db'); MODEL=os.path.join(BASE,'performance_model.pkl'); KEY_FILE=os.path.join(BASE,'secret.key')
-app=Flask(__name__)
+import shutil
+
+BASE = os.path.dirname(os.path.abspath(__file__))
+LOCAL_DB = os.path.join(BASE, 'database.db')
+if os.environ.get("VERCEL"):
+    DB = '/tmp/database.db'
+    if os.path.exists(LOCAL_DB) and not os.path.exists(DB):
+        shutil.copy2(LOCAL_DB, DB)
+else:
+    DB = LOCAL_DB
+
+MODEL = os.path.join(BASE, 'performance_model1.pkl')
+KEY_FILE = os.path.join(BASE, 'secret.key')
+app = Flask(__name__)
 
 def load_secret_key():
     # Use environment variable on Vercel or fallback key if file system is read-only
