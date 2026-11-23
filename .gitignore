@@ -57,3 +57,4 @@ htmlcov/
 .vercel/
 
 FINAL_AUDIT_REPORT.txt
+.csv
