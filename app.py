@@ -333,7 +333,7 @@ def forgot_username():
         c = db()
         users = c.execute('SELECT username FROM users WHERE LOWER(name)=LOWER(?)', (name,)).fetchall()
         c.close()
-       if len(users) == 1:
+        if len(users) == 1:
          username = users.pop()['username']
         elif len(users) == 0:
             flash('No registered account was found with that full name.', 'error')
