@@ -1,0 +1,2 @@
+# spp-system
+Student Performance Prediction System using Machine Learning
