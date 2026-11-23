@@ -39,7 +39,7 @@ def load_secret_key():
             return f.read().strip()
     except OSError:
         return "spp-system-vercel-secret-key-2026"
-
+app.secret_key = load_secret_key()
 def db():
     c=sqlite3.connect(DB); c.row_factory=sqlite3.Row; return c
 
