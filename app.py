@@ -2,6 +2,7 @@
 import csv, io, json, os, re, secrets, shutil, sqlite3
 from datetime import datetime
 from html import escape as html_escape
+from xml.parsers.expat import model
 import joblib, numpy as np
 from flask import Flask, Response, flash, redirect, render_template, request, session, url_for, send_file
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -205,10 +206,10 @@ def predict(a,s,ass,p,subjects):
     values={
         'attendance':a, 'study_hours':s, 'assignment_score':ass, 'previous_average':p,
         **{SUBJECT_FEATURES[sub]: float(subjects[sub]) for sub in SUBJECT_CATALOG},
-        'open_elective_marks': float(subjects[electives[0]])
+        'open_elective_marks': float(subjects[next(iter(electives))])
     }
     row=np.array([[values[f] for f in features]]) if features else np.array([[a,s,ass,p] + [values[SUBJECT_FEATURES[sub]] for sub in SUBJECT_CATALOG]])
-    return str(model.predict(row)[0])
+    return str(model.predict(row).item())
 
 def form_data():
     name=request.form['name'].strip(); roll=request.form['roll_no'].strip(); dept=request.form['department'].strip()
@@ -332,8 +333,8 @@ def forgot_username():
         c = db()
         users = c.execute('SELECT username FROM users WHERE LOWER(name)=LOWER(?)', (name,)).fetchall()
         c.close()
-        if len(users) == 1:
-            username = users['username']
+       if len(users) == 1:
+         username = users.pop()['username']
         elif len(users) == 0:
             flash('No registered account was found with that full name.', 'error')
         else:
