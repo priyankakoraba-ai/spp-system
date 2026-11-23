@@ -23,7 +23,7 @@ if os.environ.get("VERCEL"):
 else:
     DB = LOCAL_DB
 
-MODEL = os.path.join(BASE, 'performance_model1.pkl')
+MODEL = os.path.join(BASE, 'performance_model.pkl')
 KEY_FILE = os.path.join(BASE, 'secret.key')
 app = Flask(__name__)
 
