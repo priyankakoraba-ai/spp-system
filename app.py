@@ -81,7 +81,11 @@ class PgCursorWrapper:
         return self
     def fetchone(self):
         row = self._cur.fetchone()
-        return DualRow(row) if row is not None else None
+        if row is None:
+            return None
+        if len(row) == 1 and 'count' in row:
+            return row['count']
+        return DualRow(row)
     def fetchall(self):
         return [DualRow(r) for r in self._cur.fetchall()]
 
