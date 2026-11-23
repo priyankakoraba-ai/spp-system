@@ -1,0 +1,35 @@
+{% extends 'base.html' %}{% block public %}<section class="hero">
+    <div class="hero-copy">
+        <h1>Student Performance<br><span>Prediction System</span></h1>
+        <h2>Analyze&nbsp;&nbsp;•&nbsp;&nbsp;Predict&nbsp;&nbsp;•&nbsp;&nbsp;Improve</h2>
+        <p>Our system helps students and educators understand academic performance using data and machine learning.</p>
+        <a class="btn" href="{{url_for('register')}}">Get Started <span class="start-arrow">→</span></a>
+    </div>
+   <!-- <div class="hero-visual">
+        <div class="blob"></div>
+        <div class="person">♟</div>
+        <div class="brain">✺</div>
+        <div class="chart-icon">▮▮▮</div>
+        <div class="stack">▰<br>▰<br>▰</div>
+    </div>-->
+    <div class="hero-image"><img src="{{ url_for('static', filename='images/student_laptop.png') }}"
+            alt="Student sitting in front of a laptop"></div>
+</section>
+<section class="feature-row">
+    <div><span>▥</span>
+        <h3>Track Progress</h3>
+        <p>Enter academic details and track performance.</p>
+    </div>
+    <div><span>✺</span>
+        <h3>AI Prediction</h3>
+        <p>Uses machine learning to predict performance.</p>
+    </div>
+    <div><span>💡</span>
+        <h3>Get Suggestions</h3>
+        <p>Receive useful tips to improve performance.</p>
+    </div>
+    <div><span>♙</span>
+        <h3>For Better Future</h3>
+        <p>Understand academic trends with data.</p>
+    </div>
+</section>{% endblock %}

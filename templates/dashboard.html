@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="dash-page">
+  <section class="dash-welcome">
+    <div class="dash-welcome-text"><span class="dash-wave">👋</span><div><h1>Welcome back, {{session.get('user_name','Admin')}}!</h1><p>Here’s an overview of student performance.</p></div></div>
+    <div class="dash-date-chip"><span>📅</span><span id="dashboard-date">Loading date…</span></div>
+  </section>
+  <section class="dash-stat-grid" aria-label="Student summary">
+    <article class="dash-stat dash-blue"><div class="dash-stat-icon">👥</div><div><small>Total Students</small><strong>{{total}}</strong></div></article>
+    <article class="dash-stat dash-mint"><div class="dash-stat-icon">⭐</div><div><small>Average Score</small><strong>{{score}}%</strong></div></article>
+    <article class="dash-stat dash-green"><div class="dash-stat-icon">🏆</div><div><small>Very Good</small><strong>{{very_good}}</strong></div></article>
+    <article class="dash-stat dash-orange"><div class="dash-stat-icon">👍</div><div><small>Good</small><strong>{{good}}</strong></div></article>
+    <article class="dash-stat dash-purple"><div class="dash-stat-icon">😐</div><div><small>Average</small><strong>{{average}}</strong></div></article>
+    <article class="dash-stat dash-red"><div class="dash-stat-icon">☹️</div><div><small>Poor</small><strong>{{poor}}</strong></div></article>
+  </section>
+  <section class="dash-chart-grid">
+    <article class="dash-panel">
+      <h2><span>◔</span> Performance Distribution</h2>
+      <div class="dash-donut-row">
+        <div class="dash-donut" style="background:conic-gradient(#20a66b 0 {{perf_pct[0]}}%, #2479f2 {{perf_pct[0]}}% {{perf_pct[0]+perf_pct[1]}}%, #f5a128 {{perf_pct[0]+perf_pct[1]}}% {{perf_pct[0]+perf_pct[1]+perf_pct[2]}}%, #e54848 {{perf_pct[0]+perf_pct[1]+perf_pct[2]}}% 100%);"><div class="dash-donut-hole"><strong>{{total}}</strong><small>Students</small></div></div>
+        <ul class="dash-legend"><li><i class="lg-green"></i>Very Good <b>{{very_good}}</b></li><li><i class="lg-blue"></i>Good <b>{{good}}</b></li><li><i class="lg-orange"></i>Average <b>{{average}}</b></li><li><i class="lg-red"></i>Poor <b>{{poor}}</b></li></ul>
+      </div>
+    </article>
+    <article class="dash-panel">
+      <h2><span>▥</span> Attendance Overview</h2>
+      <div class="dash-att-chart"><div class="dash-y-axis"><span>100%</span><span>75%</span><span>50%</span><span>25%</span><span>0%</span></div><div class="dash-chart-area"><div class="dash-grid-lines"><i></i><i></i><i></i><i></i><i></i></div><div class="dash-att-bars">
+        {% for label in ['< 70%','70–80%','80–90%','> 90%'] %}<div class="dash-att-item"><div class="dash-att-value">{{attendance_pct[loop.index0]}}%</div><div class="dash-att-bar att-{{loop.index}}" style="height:{{[attendance_pct[loop.index0]*1.45,145]|min}}px"></div><small>{{label}}</small></div>{% endfor %}
+      </div></div></div>
+    </article>
+  </section>
+  <section class="dash-panel dash-recent-panel">
+    <div class="dash-recent-heading"><h2><span>👥</span> Recent Students</h2><a class="dash-view-all" href="{{url_for('students')}}">View All →</a></div>
+    <div class="dash-table-wrap"><table class="dash-recent-table"><thead><tr><th>Name</th><th>USN</th><th>Department</th><th>Prediction</th></tr></thead><tbody>
+      {% for s in students %}<tr><td>{{s.name}}</td><td>{{s.usn or '—'}}</td><td>{{s.department}}</td><td><span class="pill {{s.prediction|lower|replace(' ','-')}}">{{s.prediction}}</span></td></tr>{% else %}<tr><td colspan="4" class="dash-empty">No students yet.</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+</div>
+{% endblock %}

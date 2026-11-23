@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block public %}
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="big-cap" aria-hidden="true">🎓</div>
+    <h1>Know Your Username</h1>
+    <p>Enter your registered full name to get your username.</p>
+    <form method="post">
+      <label>👤 <input name="name" placeholder="Registered Full Name" required></label>
+      <button class="btn full">Get Username</button>
+    </form>
+    {% if username %}
+      <div class="username-result">
+        <strong>Your Username:</strong>
+        <span>{{ username }}</span>
+      </div>
+    {% endif %}
+    <div class="auth-links auth-links-left">
+      <a href="{{url_for('forgot_password')}}">Forgot Password?</a>
+    </div>
+    <small><a href="{{url_for('login')}}">← Back to Login</a></small>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="page-card analytics-page">
+  <div class="analytics-hero">
+    <div>
+      <p class="analytics-eyebrow">STUDENT PERFORMANCE INSIGHTS</p>
+      <h2>Analytics Overview</h2>
+      <p class="analytics-subtitle">Understand academic performance, attendance patterns, and subject averages at a glance.</p>
+    </div>
+    <div class="analytics-hero-mark">⌁</div>
+  </div>
+
+  <div class="analytics-kpis">
+    <div class="analytics-kpi">
+      <span class="kpi-icon blue">▣</span>
+      <div><small>Total students</small><strong>{{ total }}</strong><span class="kpi-note">Performance records</span></div>
+    </div>
+    <div class="analytics-kpi">
+      <span class="kpi-icon green">✓</span>
+      <div><small>Very Good</small><strong>{{ very_good }}</strong><span class="kpi-note">{{ performance_pct[0] }}% of students</span></div>
+    </div>
+    <div class="analytics-kpi">
+      <span class="kpi-icon amber">◷</span>
+      <div><small>Average attendance</small><strong>{{ avg_attendance }}%</strong><span class="kpi-note">Across valid records</span></div>
+    </div>
+    <div class="analytics-kpi">
+      <span class="kpi-icon violet">▤</span>
+      <div><small>Subject averages</small><strong>{{ subject_avgs|length }}</strong><span class="kpi-note">Subjects / elective group</span></div>
+    </div>
+  </div>
+
+  <div class="analytics-section-title">
+    <h3>Performance insights</h3>
+    <span>Based on current student records</span>
+  </div>
+
+  <div class="analytics-grid modern-analytics-grid">
+    <div class="chart-card modern-chart-card">
+      <div class="chart-heading">
+        <div><h4>Performance Distribution</h4><p>Share of students in each performance category</p></div>
+        <span class="chart-tag">Donut</span>
+      </div>
+      <div class="modern-donut performance-donut"
+           role="img" aria-label="Performance distribution: Very Good {{ performance_pct[0] }}%, Good {{ performance_pct[1] }}%, Average {{ performance_pct[2] }}%, Poor {{ performance_pct[3] }}%"
+           style="--vg:{{ performance_pct[0] }}%;--good:{{ performance_pct[1] }}%;--avg:{{ performance_pct[2] }}%;--poor:{{ performance_pct[3] }}%">
+        <div class="modern-donut-hole"><strong>{{ total }}</strong><small>Students</small></div>
+      </div>
+      <div class="modern-legend">
+        <span><i class="legend-dot vg"></i>Very Good <b>{{ very_good }}</b><small>{{ performance_pct[0] }}%</small></span>
+        <span><i class="legend-dot good"></i>Good <b>{{ good }}</b><small>{{ performance_pct[1] }}%</small></span>
+        <span><i class="legend-dot avg"></i>Average <b>{{ average }}</b><small>{{ performance_pct[2] }}%</small></span>
+        <span><i class="legend-dot poor"></i>Poor <b>{{ poor }}</b><small>{{ performance_pct[3] }}%</small></span>
+      </div>
+    </div>
+
+    <div class="chart-card modern-chart-card">
+      <div class="chart-heading">
+        <div><h4>Attendance Distribution</h4><p>Attendance bands for valid student records</p></div>
+        <span class="chart-tag">Donut</span>
+      </div>
+      <div class="modern-donut attendance-donut"
+           role="img" aria-label="Attendance distribution for {{ attendance_total }} students"
+           style="--high:{{ attendance_pct[0] }}%;--mid:{{ attendance_pct[1] }}%;--low:{{ attendance_pct[2] }}%">
+        <div class="modern-donut-hole"><strong>{{ attendance_total }}</strong><small>Students</small></div>
+      </div>
+      <div class="modern-legend attendance-modern-legend">
+        <span><i class="legend-dot high"></i>90%+ <b>{{ attendance_counts[0] }}</b><small>{{ attendance_pct[0] }}%</small></span>
+        <span><i class="legend-dot mid"></i>75–89% <b>{{ attendance_counts[1] }}</b><small>{{ attendance_pct[1] }}%</small></span>
+        <span><i class="legend-dot low"></i>Below 75% <b>{{ attendance_counts[2] }}</b><small>{{ attendance_pct[2] }}%</small></span>
+      </div>
+    </div>
+
+    <div class="chart-card modern-chart-card performance-bars-card">
+      <div class="chart-heading">
+        <div><h4>Students by Performance</h4><p>Student counts compared across categories</p></div>
+        <span class="chart-tag">Bar chart</span>
+      </div>
+      <div class="modern-bars">
+        {% for name, val, cl in [('Very Good', very_good, 'vg'), ('Good', good, 'good'), ('Average', average, 'avg'), ('Poor', poor, 'poor')] %}
+        <div class="modern-bar-item">
+          <div class="bar-value">{{ val }}</div>
+          <div class="modern-bar-track"><i class="{{ cl }}" style="height:{{ (val / total * 100) if total else 0 }}%"></i></div>
+          <small>{{ name }}</small>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="chart-card modern-chart-card subject-chart-card">
+      <div class="chart-heading">
+        <div><h4>Average Marks by Subject</h4><p>Average score across students with marks recorded</p></div>
+        <span class="chart-tag">0–100 scale</span>
+      </div>
+      <div class="subject-average-list">
+        {% for name, val in [('PIC', subject_avgs[0]), ('AIA', subject_avgs[1]), ('English', subject_avgs[2]), ('Maths', subject_avgs[3]), ('Physics', subject_avgs[4]), ('Open Elective', subject_avgs[5])] %}
+        <div class="subject-average-row">
+          <span>{{ name }}</span>
+          <div class="subject-average-track"><i style="width:{{ val }}%"></i></div>
+          <b>{{ val }}%</b>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

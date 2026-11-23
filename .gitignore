@@ -1,0 +1,59 @@
+venv/
+__pycache__/
+secret.key
+*.pyc
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+secret.key
+*.pem
+*.key
+
+# Database files (local development)
+database.db
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Python testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Temporary files and backups
+*.tmp
+*.bak
+*.swp
+*.old
+
+# Build and deployment caches
+.vercel/
+
+FINAL_AUDIT_REPORT.txt

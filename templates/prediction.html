@@ -1,0 +1,47 @@
+{% extends 'base.html' %}{% block content %}
+<section class="page-card prediction-card">
+    <div class="result-title-row">
+        <div>
+            <h2>Individual Performance Prediction</h2>
+            <p class="muted-text">Complete performance report for {{student.name}}.</p>
+        </div><a class="btn light" href="{{url_for('export_student_pdf',sid=student.id)}}">Export PDF Report</a><a class="btn light" href="{{url_for('prediction_home')}}">All Students</a>
+    </div>
+    <div class="detail-box">
+        <h4>Student Details</h4>
+        <div class="mini-grid">
+            <p>Name: <b>{{student.name}}</b></p>
+            <p>Roll Number: <b>{{student.roll_no}}</b></p>
+            <p>USN: <b>{{student.usn or '—'}}</b></p>
+            <p>Department: <b>{{student.department}}</b></p>
+            <p>Attendance: <b>{{student.attendance|round(1)}}%</b></p>
+        </div>
+    </div>
+    <div class="detail-box">
+        <h4>Complete Subject Performance</h4>
+        <div class="subject-result-grid">{% if subject_marks %}{% for subject,mark in subject_marks.items() %}<div
+                class="subject-result"><span>{{subject}}</span><b>{{mark|round(2)}} / 100</b><small>Percentage:
+                    {{mark|round(2)}}%</small></div>{% endfor %}{% else %}<div class="subject-result-empty">No subject
+                marks recorded.</div>{% endif %}</div>
+        <div class="marks-summary performance-summary">
+            <div><span>Total Marks</span><b>{{metrics.total_marks|round(0)|int}} / {{metrics.max_marks}}</b></div>
+            <div><span>Overall Percentage</span><b>{{metrics.overall_percentage|round(2)}}%</b></div>
+        </div>
+    </div>
+    <div class="detail-box">
+        <h4>Other Performance Parameters</h4>
+        <div class="mini-grid">
+            <p>Attendance: <b>{{student.attendance|round(1)}}%</b></p>
+            <p>Study Hours: <b>{{student.study_hours}}</b> / day</p>
+            <p>Assignment Score: <b>{{student.assignment_score|round(2)}}%</b></p>
+            <p>Previous Average: <b>{{student.previous_average|round(2)}}%</b></p>
+        </div>
+    </div>
+    <div class="prediction-box {{student.prediction|lower|replace(' ','-')}}"><span>🏆</span>
+        <div><small>Predicted Performance</small><strong>{{student.prediction|upper}}</strong></div>
+    </div>
+    <div class="suggestion"><b>💡 Suggestions for this student</b>
+        <ul>{% for tip in tips %}<li>{{tip}}</li>{% endfor %}</ul>
+    </div>
+    <div class="result-actions"><a class="btn" href="{{url_for('edit_student',sid=student.id)}}">Edit Student</a><a
+            class="btn light" href="{{url_for('prediction_home')}}">Back to All Students</a></div>
+</section>{% endblock %}

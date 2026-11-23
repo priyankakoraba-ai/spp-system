@@ -1,0 +1,136 @@
+{% extends 'base.html' %}{% block content %}
+<section class="page-card form-card">
+  <h2>{{ 'Edit Student' if student else 'Add Student' }}</h2>
+  <form method="post" id="studentForm">
+    <h4>Student Information</h4>
+    <div class="form-grid">
+      <div><label>Name <em>*</em></label><input name="name" value="{{student.name if student else ''}}"
+          placeholder="Enter student name" required></div>
+      <div><label>Roll Number <em>*</em></label><input name="roll_no" value="{{student.roll_no if student else ''}}"
+          placeholder="Enter roll number" required></div>
+      <div><label>USN</label><input name="usn" value="{{student.usn if student and student.usn else ''}}"
+          placeholder="Enter University Seat Number"></div>
+      <div><label>Department <em>*</em></label><select name="department" required>
+          <option value="AI & DS">Select department</option>{% for d in ['AI & DS','CSE','ECE','EEE','EE','ME','CSD','CIVIL','CE'] %}<option {% if
+            student and student.department==d %}selected{% endif %}>{{d}}</option>{% endfor %}
+        </select></div>
+    </div>
+
+    <h4>Academic Details</h4>
+    <p class="subject-help">Select one subject, enter its marks, and click <b>Add Subject</b>. The saved subject is
+      removed from the list automatically. Add all 6 subjects: the 5 compulsory subjects and exactly one Open Elective (EC or ME). <b>Subject marks are used directly by the
+        machine-learning model along with attendance, study hours, assignment score and previous average.</b></p>
+    <div class="subject-entry-row">
+      <div class="subject-select-wrap"><label>Select Subject</label><select id="subjectSelect"></select></div>
+      <div><label>Enter Marks</label><input type="number" id="subjectMarks" min="0" max="100" step="0.1"
+          placeholder="Enter marks"></div>
+      <div class="subject-add-wrap"><label>&nbsp;</label><button type="button" class="btn small-btn"
+          id="addSubjectBtn">+ Add Subject</button></div>
+    </div>
+    <div id="subjectMessage" class="subject-message" aria-live="polite"></div>
+
+    <div class="added-subjects-card">
+      <div class="added-title">Added Subjects <span id="subjectCount">0</span></div>
+      <table id="subjectTable">
+        <thead>
+          <tr>
+            <th>Subject</th>
+            <th>Marks</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div id="emptySubjects" class="empty-subjects">No subjects added yet. Select a subject above to begin.</div>
+    </div>
+    <input type="hidden" name="subject_marks" id="subjectMarksJson" value="{}">
+
+    <div class="form-grid four">
+      <div><label>Attendance (%)</label><input type="number" name="attendance" min="0" max="100" step=".1"
+          value="{{student.attendance if student else ''}}" placeholder="Enter percentage" required></div>
+      <div><label>Study Hours/Day</label><input type="number" name="study_hours" min="0" max="24" step=".1"
+          value="{{student.study_hours if student else ''}}" placeholder="Enter hours" required></div>
+      <div><label>Assignment Score</label><input type="number" name="assignment_score" min="0" max="100" step=".1"
+          value="{{student.assignment_score if student else ''}}" placeholder="Enter score" required></div>
+      <div><label>Previous Average</label><input type="number" name="previous_average" min="0" max="100" step=".1"
+          value="{{student.previous_average if student else ''}}" placeholder="Enter percentage" required></div>
+    </div>
+    <button class="btn" type="submit">{{'Save & Re-predict' if student else 'Predict Performance'}}</button>
+    <button type="reset" class="btn reset" id="resetBtn">Reset</button>
+  </form>
+</section>
+
+<script type="application/json" id="existingMarksData">
+    {{ (existing_marks or {}) | tojson }}
+</script>
+
+<script>
+  (function () {
+    const catalog = [
+      'PIC (Programming in C)',
+      'AIA (Artificial Intelligence & Applications)',
+      'English',
+      'Mathematics',
+      'Physics',
+      'Electronics & Communication (EC)',
+      'Mechanical (ME)'
+    ];
+    let added = {};
+
+try {
+    const data = document.getElementById("existingMarksData").textContent;
+    added = JSON.parse(data || "{}");
+} catch (e) {
+    added = {};
+}
+  const select = document.getElementById('subjectSelect'), marks = document.getElementById('subjectMarks');
+  const tbody = document.querySelector('#subjectTable tbody'), empty = document.getElementById('emptySubjects');
+  const jsonInput = document.getElementById('subjectMarksJson'), count = document.getElementById('subjectCount'), msg = document.getElementById('subjectMessage');
+  const compulsory = [
+    'PIC (Programming in C)',
+    'AIA (Artificial Intelligence & Applications)',
+    'English',
+    'Mathematics',
+    'Physics'
+  ];
+  const electives = ['Electronics & Communication (EC)', 'Mechanical (ME)'];
+
+  function render() {
+    select.innerHTML = '';
+    const chosenElective = electives.find(s => s in added);
+    catalog.filter(s => !(s in added) && !(chosenElective && electives.includes(s))).forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; select.appendChild(o); });
+    if (!select.options.length) { const o = document.createElement('option'); o.textContent = 'All subjects added'; o.disabled = true; select.appendChild(o); }
+    tbody.innerHTML = '';
+    Object.entries(added).forEach(([subject, mark]) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + subject + '</td><td>' + mark + '</td><td><button type="button" class="remove-subject" data-subject="' + encodeURIComponent(subject) + '">Remove</button></td>';
+      tbody.appendChild(tr);
+    });
+    empty.style.display = Object.keys(added).length ? 'none' : 'block';
+    count.textContent = Object.keys(added).length;
+    jsonInput.value = JSON.stringify(added);
+    tbody.querySelectorAll('.remove-subject').forEach(b => b.addEventListener('click', () => { delete added[decodeURIComponent(b.dataset.subject)]; msg.textContent = 'Subject returned to the selection list.'; msg.className = 'subject-message success'; render(); }));
+  }
+  document.getElementById('addSubjectBtn').addEventListener('click', () => {
+    const subject = select.value, value = marks.value.trim(), n = Number(value);
+    if (!subject || !(value !== '') || Number.isNaN(n) || n < 0 || n > 100) { msg.textContent = 'Please select a subject and enter marks between 0 and 100.'; msg.className = 'subject-message error'; return; }
+    if (electives.includes(subject) && electives.some(s => s in added)) { msg.textContent = 'Only one Open Elective can be selected: EC or Mechanical.'; msg.className = 'subject-message error'; return; }
+    added[subject] = n; marks.value = ''; msg.textContent = subject + ' added successfully. It has been removed from the selection list.'; msg.className = 'subject-message success'; render();
+  });
+  document.getElementById('studentForm').addEventListener('submit', e => {
+    const missing = compulsory.filter(s => !(s in added));
+    const chosen = electives.filter(s => s in added);
+    if (missing.length || chosen.length !== 1 || Object.keys(added).length !== 6) {
+      e.preventDefault();
+      const parts = [];
+      if (missing.length) parts.push('Missing compulsory: ' + missing.join(', '));
+      if (chosen.length !== 1) parts.push('Choose exactly one Open Elective: Electronics & Communication (EC) or Mechanical (ME).');
+      msg.textContent = 'Please add exactly 6 subjects. ' + parts.join(' ');
+      msg.className = 'subject-message error';
+    } else jsonInput.value = JSON.stringify(added);
+  });
+  document.getElementById('resetBtn').addEventListener('click', () => { added = {}; setTimeout(() => { msg.textContent = ''; render(); }, 0); });
+  render();
+}) ();
+</script>
+{% endblock %}

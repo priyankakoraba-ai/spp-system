@@ -1,0 +1,33 @@
+{% extends 'base.html' %}{% block content %}
+<section class="page-card">
+    <div class="result-title-row">
+        <div>
+            <h2>{{student.name}} – Complete Performance</h2>
+            <p class="muted-text">Roll No: {{student.roll_no}} &nbsp; | &nbsp; Department: {{student.department}}</p>
+        </div><a class="btn light" href="{{url_for('prediction',sid=student.id)}}">Full Prediction</a>
+    </div>
+    <div class="detail-columns">
+        <div class="detail-box">
+            <h4>Performance Details</h4>
+            <p>Attendance <b>{{student.attendance|round(1)}}%</b></p>
+            <p>Study Hours <b>{{student.study_hours}} / day</b></p>
+            <p>Assignment Score <b>{{student.assignment_score|round(2)}}%</b></p>
+            <p>Previous Average <b>{{student.previous_average|round(2)}}%</b></p>
+            <p>Total Marks <b>{{metrics.total_marks|round(0)|int}} / {{metrics.max_marks}}</b></p>
+            <p>Overall Percentage <b>{{metrics.overall_percentage|round(2)}}%</b></p>
+        </div>
+        <div class="big-result {{student.prediction|lower|replace(' ','-')}}"><span>🏆</span><small>Predicted
+                Performance</small><strong>{{student.prediction|upper}}</strong></div>
+    </div>
+    <div class="detail-subjects">
+        <h4>Subjects & Marks</h4>
+        <div class="subject-result-grid">{% for subject,mark in subject_marks.items() %}<div class="subject-result">
+                <span>{{subject}}</span><b>{{mark|round(2)}} / 100</b><small>Percentage: {{mark|round(2)}}%</small>
+            </div>{% else %}<div class="subject-result-empty">No subject marks recorded.</div>{% endfor %}</div>
+    </div>
+    <div class="suggestion"><b>💡 Suggestions</b>
+        <ul>{% for tip in tips %}<li>{{tip}}</li>{% endfor %}</ul>
+    </div>
+    <div class="result-actions"><a class="btn" href="{{url_for('prediction',sid=student.id)}}">View Prediction
+            Result</a><a class="btn light" href="{{url_for('export_student_pdf',sid=student.id)}}">Export PDF Report</a><a class="btn light" href="{{url_for('students')}}">Back to Students</a></div>
+</section>{% endblock %}
