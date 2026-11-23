@@ -17,10 +17,17 @@ DB=os.path.join(BASE,'database.db'); MODEL=os.path.join(BASE,'performance_model.
 app=Flask(__name__)
 
 def load_secret_key():
-    if os.environ.get('SECRET_KEY'): return os.environ['SECRET_KEY']
-    if not os.path.exists(KEY_FILE): open(KEY_FILE,'w').write(secrets.token_hex(32))
-    return open(KEY_FILE).read().strip()
-app.secret_key=load_secret_key()
+    # Use environment variable on Vercel or fallback key if file system is read-only
+    if os.environ.get("SECRET_KEY"):
+        return os.environ.get("SECRET_KEY")
+    try:
+        if not os.path.exists(KEY_FILE):
+            with open(KEY_FILE, "w") as f:
+                f.write(secrets.token_hex(32))
+        with open(KEY_FILE, "r") as f:
+            return f.read().strip()
+    except OSError:
+        return "spp-system-vercel-secret-key-2026"
 
 def db():
     c=sqlite3.connect(DB); c.row_factory=sqlite3.Row; return c
