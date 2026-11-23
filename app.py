@@ -138,11 +138,11 @@ def init():
         if os.path.exists(LOCAL_DB):
             sc = sqlite3.connect(LOCAL_DB)
             sc.row_factory = sqlite3.Row
-            if c.execute('SELECT COUNT(*) FROM users').fetchone()[0] == 0:
+            if c.execute('SELECT COUNT(*) FROM users').fetchone() == 0:
                 for u in sc.execute('SELECT name, username, password FROM users').fetchall():
                     c.execute('INSERT INTO users(name, username, password) VALUES(?,?,?) ON CONFLICT DO NOTHING',
                               (u['name'], u['username'], u['password']))
-            if c.execute('SELECT COUNT(*) FROM students').fetchone()[0] == 0:
+            if c.execute('SELECT COUNT(*) FROM students').fetchone() == 0:
                 for s in sc.execute('SELECT * FROM students ORDER BY id ASC').fetchall():
                     s_dict = dict(s)
                     c.execute('''INSERT INTO students(name,roll_no,department,attendance,study_hours,assignment_score,previous_average,prediction,math_marks,physics_marks,cs_marks,subject_marks,usn)
