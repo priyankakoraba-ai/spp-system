@@ -467,7 +467,8 @@ def analytics():
     performance_pct=[round(n*100/total,1) if total else 0 for n in [very_good,good,average,poor]]
     return render_template('analytics.html',very_good=very_good,good=good,average=average,poor=poor,total=total,subject_avgs=subject_avgs,attendance_counts=attendance_counts,attendance_pct=attendance_pct,attendance_total=attendance_total,avg_attendance=avg_attendance,performance_pct=performance_pct)
 
+init()
+
 if __name__=='__main__':
-    init()
     if not os.path.exists(MODEL): print('Model file missing. Run: python model.py')
     app.run(host='127.0.0.1',port=5000,debug=os.environ.get('FLASK_DEBUG')=='1')
