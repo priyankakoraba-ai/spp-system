@@ -13,7 +13,12 @@
     <header class="topbar">
         <div class="brand"><span class="cap-icon graduation-icon">🎓</span><span>Student Performance Prediction
                 System</span></div>
-        <div class="topbar-right"><div class="live-datetime"><span class="live-clock-icon">◷</span><div><strong id="live-time">--:--:--</strong><small id="live-date">Loading date…</small></div></div><div class="admin">◉ <span>{{session.get('user_name')}}</span></div></div>
+        <div class="topbar-right">
+            <div class="live-datetime"><span class="live-clock-icon">◷</span>
+                <div><strong id="live-time">--:--:--</strong><small id="live-date">Loading date…</small></div>
+            </div>
+            <div class="admin">◉ <span>{{session.get('user_name')}}</span></div>
+        </div>
     </header>
     <div class="app">
         <aside class="sidebar">
@@ -23,7 +28,8 @@
                 <span>Dashboard</span></a><a
                 class="{% if request.endpoint in ['add_student','edit_student'] %}active{% endif %}"
                 href="{{url_for('add_student')}}">♙ <span>Add Student</span></a><a
-                class="{% if request.endpoint in ['prediction','prediction_home'] %}active{% endif %}" href="{{url_for('prediction_home')}}">🎯
+                class="{% if request.endpoint in ['prediction','prediction_home'] %}active{% endif %}"
+                href="{{url_for('prediction_home')}}">🎯
                 <span>Prediction</span></a><a
                 class="{% if request.endpoint in ['students','student_detail'] %}active{% endif %}"
                 href="{{url_for('students')}}">▣ <span>Students</span></a><a
@@ -38,22 +44,28 @@
         <div class="brand"><span class="cap-icon graduation-icon">🎓</span><span>Student Performance Prediction
                 System</span></div>
         <div><a href="{{url_for('home')}}">Home</a><a href="{{url_for('login')}}">Login</a><a
-                href="{{url_for('register')}}">Register</a></div>
+                href="{{url_for('register')}}">Register</a>
+            <a href="{{ url_for('admin_login') }}"
+                style="padding: 8px 16px; border: 1.5px solid #1e3a8a; color: #1e3a8a; border-radius: 8px; font-weight: 600; text-decoration: none;">
+                Admin Login
+            </a>
+
+        </div>
     </nav>
     {% with ms=get_flashed_messages(with_categories=true) %}{% for c,m in ms %}<div class="flash public-flash {{c}}">
         {{m}}</div>{% endfor %}{% endwith %}{% block public %}{% endblock %}{% endif %}
-<script>
-(function(){
-  function updateClock(){
-    const now=new Date();
-    const time=now.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-    const date=now.toLocaleDateString(undefined,{weekday:'short',year:'numeric',month:'short',day:'numeric'});
-    const t=document.getElementById('live-time'); const d=document.getElementById('live-date'); const dd=document.getElementById('dashboard-date');
-    if(t)t.textContent=time; if(d)d.textContent=date; if(dd)dd.textContent=now.toLocaleDateString(undefined,{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  }
-  updateClock(); window.setInterval(updateClock,1000);
-})();
-</script>
+    <script>
+        (function () {
+            function updateClock() {
+                const now = new Date();
+                const time = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                const date = now.toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+                const t = document.getElementById('live-time'); const d = document.getElementById('live-date'); const dd = document.getElementById('dashboard-date');
+                if (t) t.textContent = time; if (d) d.textContent = date; if (dd) dd.textContent = now.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            }
+            updateClock(); window.setInterval(updateClock, 1000);
+        })();
+    </script>
 </body>
 
 </html>
