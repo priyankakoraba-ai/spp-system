@@ -2,7 +2,6 @@
 import csv, io, json, os, re, secrets, shutil, sqlite3
 from datetime import datetime
 from html import escape as html_escape
-from xml.parsers.expat import model
 import joblib, numpy as np
 from flask import Flask, Response, flash, redirect, render_template, request, session, url_for, send_file
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -55,7 +54,7 @@ def load_secret_key():
 app.secret_key = load_secret_key()
 
 class DualRow(dict):
-    """Supports both row['col'] and row[0] indexing for SQLite and PostgreSQL."""
+    """Supports both row['col'] and row indexing for SQLite and PostgreSQL."""
     def __init__(self, mapping):
         super().__init__(mapping)
         self._vals = list(mapping.values())
@@ -109,6 +108,14 @@ def db():
     c.row_factory = sqlite3.Row
     return c
 
+def assign_sample_students_to_suk_uni(c):
+    """Links the 36 sample records to suk_uni (Sharanbasva University) while keeping Head Admin view open."""
+    uni_row = c.execute(
+        "SELECT id FROM users WHERE LOWER(TRIM(username)) = 'suk_uni' OR LOWER(name) LIKE '%sharanbasva%' ORDER BY id ASC LIMIT 1"
+    ).fetchone()
+    if uni_row:
+        c.execute("UPDATE students SET user_id = ? WHERE user_id = 1 OR user_id IS NULL", (uni_row['id'],))
+
 def init():
     c = db()
     if DATABASE_URL and psycopg2:
@@ -132,8 +139,10 @@ def init():
             physics_marks REAL DEFAULT 0,
             cs_marks REAL DEFAULT 0,
             subject_marks TEXT DEFAULT '{}',
-            usn TEXT
+            usn TEXT,
+            user_id INTEGER DEFAULT 1
         )''')
+        c.execute('ALTER TABLE students ADD COLUMN IF NOT EXISTS user_id INTEGER DEFAULT 1')
         c.commit()
         if os.path.exists(LOCAL_DB):
             sc = sqlite3.connect(LOCAL_DB)
@@ -145,15 +154,16 @@ def init():
             if c.execute('SELECT COUNT(*) FROM students').fetchone() == 0:
                 for s in sc.execute('SELECT * FROM students ORDER BY id ASC').fetchall():
                     s_dict = dict(s)
-                    c.execute('''INSERT INTO students(name,roll_no,department,attendance,study_hours,assignment_score,previous_average,prediction,math_marks,physics_marks,cs_marks,subject_marks,usn)
-                                 VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+                    c.execute('''INSERT INTO students(name,roll_no,department,attendance,study_hours,assignment_score,previous_average,prediction,math_marks,physics_marks,cs_marks,subject_marks,usn,user_id)
+                                 VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,1)''',
                               (s_dict.get('name'), s_dict.get('roll_no'), s_dict.get('department'),
                                s_dict.get('attendance'), s_dict.get('study_hours'), s_dict.get('assignment_score'),
                                s_dict.get('previous_average'), s_dict.get('prediction'),
                                s_dict.get('math_marks', 0), s_dict.get('physics_marks', 0), s_dict.get('cs_marks', 0),
                                s_dict.get('subject_marks', '{}'), s_dict.get('usn', '')))
             sc.close()
-            c.commit()
+        assign_sample_students_to_suk_uni(c)
+        c.commit()
         c.close()
         return
 
@@ -164,11 +174,28 @@ def init():
         if col not in cols: c.execute(f'ALTER TABLE students ADD COLUMN {col} REAL DEFAULT 0')
     if 'subject_marks' not in cols: c.execute("ALTER TABLE students ADD COLUMN subject_marks TEXT DEFAULT '{}'")
     if 'usn' not in cols: c.execute('ALTER TABLE students ADD COLUMN usn TEXT')
+    if 'user_id' not in cols: c.execute('ALTER TABLE students ADD COLUMN user_id INTEGER DEFAULT 1')
+    assign_sample_students_to_suk_uni(c)
     c.execute("UPDATE students SET usn = 'SAMPLE-USN-' || printf('%03d', CAST(TRIM(roll_no) AS INTEGER)) WHERE usn IS NULL OR TRIM(usn) = ''")
     c.commit(); c.close()
 
 def logged_in(): return 'user_id' in session
 def guard(): return None if logged_in() else redirect(url_for('login'))
+
+def is_admin():
+    """Only 'admin' is the Head of the Project and sees all users and all student records."""
+    uname = (session.get('username') or '').strip().lower()
+    fname = (session.get('user_name') or '').strip().lower()
+    return uname == 'admin' or fname == 'admin'
+
+def owner_clause():
+    if is_admin():
+        return '1=1', []
+    return 'user_id=?', [session.get('user_id')]
+
+def get_student_for_user(c, sid):
+    clause, params = owner_clause()
+    return c.execute(f'SELECT * FROM students WHERE id=? AND {clause}', [sid] + params).fetchone()
 
 SUBJECT_CATALOG = [
     'PIC (Programming in C)',
@@ -192,6 +219,17 @@ SUBJECT_FEATURES = {
     'Electronics & Communication (EC)': 'open_elective_marks',
     'Mechanical (ME)': 'open_elective_marks',
 }
+
+def predict(a,s,ass,p,subjects):
+    bundle=joblib.load(MODEL)
+    model=bundle['model'] if isinstance(bundle,dict) else bundle
+    features=bundle.get('features', []) if isinstance(bundle,dict) else []
+    missing=[sub for sub in SUBJECT_CATALOG if sub not in subjects]
+    electives=[sub for sub in OPEN_ELECTIVES if sub in subjects]
+    if missing:
+        raise ValueError('Please enter marks for all 5 compulsory subjects before prediction.')
+    if len(electives) != 1:
+        raise ValueError('Please enter marks for exactly one Open Elective: Electronics & Communication (EC) or Mechanical (ME).')
 
 def predict(a,s,ass,p,subjects):
     bundle=joblib.load(MODEL)
@@ -229,7 +267,6 @@ def form_data():
     if missing:
         raise ValueError('Please enter marks for all 5 compulsory subjects before prediction.')
     if len(electives) != 1:
-
         raise ValueError('Please enter marks for exactly one Open Elective: Electronics & Communication (EC) or Mechanical (ME).')
     math=cleaned.get('Mathematics', 0); physics=cleaned.get('Physics', 0); cs=cleaned.get('PIC (Programming in C)', 0)
     return name,roll,dept,a,s,ass,p,math,physics,cs,cleaned
@@ -245,7 +282,10 @@ def tips(st):
     if st['prediction']=='Average': return ['Focus on regular practice, attendance and improving subject-wise marks.']
     return t or ['Focus on the fundamentals, increase study time and seek support in difficult subjects.']
 
-def count(c,label): return c.execute('SELECT COUNT(*) FROM students WHERE prediction=?',(label,)).fetchone()
+def count(c,label):
+    clause, params = owner_clause()
+    row = c.execute(f'SELECT COUNT(*) FROM students WHERE prediction=? AND {clause}', [label] + params).fetchone()
+    return row if isinstance(row, int) else row['count']
 
 def performance_metrics(student):
     try:
@@ -280,7 +320,10 @@ def register():
         if password!=request.form['confirm_password']: flash('Passwords do not match.','error'); return redirect(url_for('register'))
         if len(password)<6: flash('Password must contain at least 6 characters.','error'); return redirect(url_for('register'))
         c=db()
-        try: c.execute('INSERT INTO users(name,username,password) VALUES(?,?,?)',(name,username,generate_password_hash(password))); c.commit()
+        try:
+            c.execute('INSERT INTO users(name,username,password) VALUES(?,?,?)',(name,username,generate_password_hash(password)))
+            assign_sample_students_to_suk_uni(c)
+            c.commit()
         except IntegrityErrors: flash('Username already exists.','error'); return redirect(url_for('register'))
         finally: c.close()
         flash('Registration successful. Please login.','success'); return redirect(url_for('login'))
@@ -334,7 +377,7 @@ def forgot_username():
         users = c.execute('SELECT username FROM users WHERE LOWER(name)=LOWER(?)', (name,)).fetchall()
         c.close()
         if len(users) == 1:
-         username = users.pop()['username']
+            username = users.pop()['username']
         elif len(users) == 0:
             flash('No registered account was found with that full name.', 'error')
         else:
@@ -345,7 +388,9 @@ def forgot_username():
 def login():
     if request.method=='POST':
         c=db(); u=c.execute('SELECT * FROM users WHERE username=?',(request.form['username'].strip(),)).fetchone(); c.close()
-        if u and check_password_hash(u['password'],request.form['password']): session['user_id']=u['id']; session['user_name']=u['name']; return redirect(url_for('dashboard'))
+        if u and check_password_hash(u['password'],request.form['password']):
+            session['user_id']=u['id']; session['user_name']=u['name']; session['username']=u['username']
+            return redirect(url_for('dashboard'))
         flash('Invalid username or password.','error')
     return render_template('login.html')
 
@@ -356,8 +401,11 @@ def logout(): session.clear(); return redirect(url_for('home'))
 def dashboard():
     g=guard()
     if g:return g
-    c=db(); total=c.execute('SELECT COUNT(*) FROM students').fetchone(); very_good=count(c,'Very Good'); good=count(c,'Good'); average=count(c,'Average'); poor=count(c,'Poor')
-    rows=c.execute('SELECT subject_marks, previous_average FROM students').fetchall()
+    c=db(); clause, params = owner_clause()
+    total_row = c.execute(f'SELECT COUNT(*) FROM students WHERE {clause}', params).fetchone()
+    total = total_row if isinstance(total_row, int) else total_row['count']
+    very_good=count(c,'Very Good'); good=count(c,'Good'); average=count(c,'Average'); poor=count(c,'Poor')
+    rows=c.execute(f'SELECT subject_marks, previous_average FROM students WHERE {clause}', params).fetchall()
     recent_scores=[]
     for row in rows:
         try:
@@ -375,19 +423,21 @@ def dashboard():
                 continue
         recent_scores.append(float(row['previous_average'] or 0))
     avg=sum(recent_scores)/len(recent_scores) if recent_scores else 0
-    recent=c.execute('''SELECT * FROM (SELECT * FROM students ORDER BY id DESC LIMIT 5) AS latest_students ORDER BY CAST(TRIM(roll_no) AS INTEGER) ASC, roll_no COLLATE NOCASE ASC, id ASC''').fetchall()
-    attendance_rows=c.execute('SELECT attendance FROM students').fetchall()
+    recent=c.execute(f'''SELECT * FROM (SELECT * FROM students WHERE {clause} ORDER BY id DESC LIMIT 5) AS latest_students ORDER BY CAST(TRIM(roll_no) AS INTEGER) ASC, roll_no COLLATE NOCASE ASC, id ASC''', params).fetchall()
+    attendance_rows=c.execute(f'SELECT attendance FROM students WHERE {clause}', params).fetchall()
     attendance_values=[]
     for ar in attendance_rows:
-        try: attendance_values.append(float(ar['attendance'] or 0))
+        try:
+            attendance_values.append(float(ar['attendance'] or 0))
         except (TypeError, ValueError): attendance_values.append(0.0)
     bins=[sum(1 for v in attendance_values if v < 70),sum(1 for v in attendance_values if 70 <= v < 80),sum(1 for v in attendance_values if 80 <= v < 90),sum(1 for v in attendance_values if v >= 90)]
     attendance_total=len(attendance_values) or 1
     attendance_pct=[round(v*100/attendance_total,1) for v in bins]
+    all_users = c.execute('SELECT id, name, username FROM users ORDER BY id ASC').fetchall() if is_admin() else []
     c.close()
     perf_total=total or 1
     perf_pct=[round(very_good*100/perf_total,1),round(good*100/perf_total,1),round(average*100/perf_total,1),round(poor*100/perf_total,1)]
-    return render_template('dashboard.html',total=total,very_good=very_good,good=good,average=average,poor=poor,score=round(avg,1),students=recent,attendance_bins=bins,attendance_pct=attendance_pct,perf_pct=perf_pct)
+    return render_template('dashboard.html',total=total,very_good=very_good,good=good,average=average,poor=poor,score=round(avg,1),students=recent,attendance_bins=bins,attendance_pct=attendance_pct,perf_pct=perf_pct,is_admin=is_admin(),all_users=all_users)
 
 @app.route('/add-student',methods=['GET','POST'])
 def add_student():
@@ -399,18 +449,18 @@ def add_student():
         except (ValueError,KeyError) as e:
             flash(str(e) if str(e).startswith('Please enter marks') else 'Please enter valid values.','error'); return render_template('add_student.html',student=None)
         usn=request.form.get('usn','').strip()
-        c=db(); cur=c.execute('''INSERT INTO students(name,roll_no,department,attendance,study_hours,assignment_score,previous_average,prediction,math_marks,physics_marks,cs_marks,subject_marks,usn) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)''',(name,roll,dept,a,s,ass,p,result,math,physics,cs,json.dumps(subjects),usn)); sid=cur.lastrowid; c.commit(); c.close(); return redirect(url_for('prediction',sid=sid))
+        uid=session.get('user_id', 1)
+        c=db(); cur=c.execute('''INSERT INTO students(name,roll_no,department,attendance,study_hours,assignment_score,previous_average,prediction,math_marks,physics_marks,cs_marks,subject_marks,usn,user_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',(name,roll,dept,a,s,ass,p,result,math,physics,cs,json.dumps(subjects),usn,uid)); sid=cur.lastrowid; c.commit(); c.close(); return redirect(url_for('prediction',sid=sid))
     return render_template('add_student.html',student=None)
 
 @app.route('/edit/<int:sid>',methods=['GET','POST'])
 def edit_student(sid):
     g=guard()
     if g:return g
-    c=db(); st=c.execute('SELECT * FROM students WHERE id=?',(sid,)).fetchone()
+    c=db(); st=get_student_for_user(c, sid)
     if not st:c.close();flash('Student not found.','error');return redirect(url_for('students'))
     if request.method=='POST':
         try: name,roll,dept,a,s,ass,p,math,physics,cs,subjects=form_data(); result=predict(a,s,ass,p,subjects)
-
         except (ValueError,KeyError) as e: c.close();flash(str(e) if str(e).startswith('Please enter marks') else 'Please enter valid values.','error');return redirect(url_for('edit_student',sid=sid))
         usn=request.form.get('usn','').strip()
         c.execute('''UPDATE students SET name=?,roll_no=?,department=?,attendance=?,study_hours=?,assignment_score=?,previous_average=?,prediction=?,math_marks=?,physics_marks=?,cs_marks=?,subject_marks=?,usn=? WHERE id=?''',(name,roll,dept,a,s,ass,p,result,math,physics,cs,json.dumps(subjects),usn,sid));c.commit();c.close();return redirect(url_for('prediction',sid=sid))
@@ -440,7 +490,7 @@ def prediction_home():
 def prediction(sid):
     g=guard()
     if g:return g
-    c=db(); st=c.execute('SELECT * FROM students WHERE id=?',(sid,)).fetchone();c.close()
+    c=db(); st=get_student_for_user(c, sid);c.close()
     if not st: flash('Student not found.','error'); return redirect(url_for('students'))
     return render_template('prediction.html',student=st,tips=tips(st),subject_marks=json.loads(st['subject_marks'] or '{}'),metrics=performance_metrics(st))
 
@@ -448,7 +498,7 @@ def prediction(sid):
 def export_student_pdf(sid):
     g=guard()
     if g:return g
-    c=db(); st=c.execute('SELECT * FROM students WHERE id=?',(sid,)).fetchone(); c.close()
+    c=db(); st=get_student_for_user(c, sid); c.close()
     if not st:
         flash('Student not found.','error')
         return redirect(url_for('students'))
@@ -499,12 +549,21 @@ def export_student_pdf(sid):
 def student_detail(sid):
     g=guard()
     if g:return g
-    c=db(); st=c.execute('SELECT * FROM students WHERE id=?',(sid,)).fetchone();c.close()
+    c=db(); st=get_student_for_user(c, sid);c.close()
+    if not st: flash('Student not found.','error'); return redirect(url_for('students'))
+
+
+    @app.route('/student/<int:sid>')
+def student_detail(sid):
+    g=guard()
+    if g:return g
+    c=db(); st=get_student_for_user(c, sid);c.close()
     if not st: flash('Student not found.','error'); return redirect(url_for('students'))
     return render_template('student_detail.html',student=st,subject_marks=json.loads(st['subject_marks'] or '{}'),metrics=performance_metrics(st),tips=tips(st))
 
 def search_students():
-    q=request.args.get('q','').strip(); pf=request.args.get('prediction','').strip(); sql='SELECT * FROM students WHERE 1=1'; params=[]
+    clause, params = owner_clause()
+    q=request.args.get('q','').strip(); pf=request.args.get('prediction','').strip(); sql=f'SELECT * FROM students WHERE {clause}'
     if q: sql+=' AND (name LIKE ? OR roll_no LIKE ? OR usn LIKE ? OR department LIKE ?)'; params += [f'%{q}%']*4
     if pf in ('Very Good','Good','Average','Poor'): sql+=' AND prediction=?';params.append(pf)
     c=db(); rows=c.execute(sql+' ORDER BY CAST(TRIM(roll_no) AS INTEGER) ASC, roll_no COLLATE NOCASE ASC, id ASC',params).fetchall();c.close();return rows,q,pf
@@ -533,16 +592,18 @@ def export_csv():
 def delete(sid):
     g=guard()
     if g:return g
-    c=db();c.execute('DELETE FROM students WHERE id=?',(sid,));c.commit();c.close();flash('Student deleted.','success');return redirect(url_for('students'))
+    c=db(); clause, params = owner_clause()
+    c.execute(f'DELETE FROM students WHERE id=? AND {clause}', [sid] + params)
+    c.commit();c.close();flash('Student deleted.','success');return redirect(url_for('students'))
 
 @app.route('/analytics')
 def analytics():
     g=guard()
     if g:return g
-    c=db(); very_good=count(c,'Very Good');good=count(c,'Good');average=count(c,'Average');poor=count(c,'Poor');total=very_good+good+average+poor
-    rows=c.execute('SELECT subject_marks, attendance FROM students').fetchall()
+    c=db(); clause, params = owner_clause()
+    very_good=count(c,'Very Good');good=count(c,'Good');average=count(c,'Average');poor=count(c,'Poor');total=very_good+good+average+poor
+    rows=c.execute(f'SELECT subject_marks, attendance FROM students WHERE {clause}', params).fetchall()
     attendance_values=[]
-
     for r in rows:
         try:
             value=float(r['attendance'] or 0)
