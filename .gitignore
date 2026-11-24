@@ -22,7 +22,7 @@ secret.key
 *.key
 
 # Database files (local development)
-database.db
+*.database.db
 *.db
 *.sqlite
 *.sqlite3
