@@ -54,7 +54,7 @@
         <td style="padding: 10px;">{{ u['id'] }}</td>
         <td style="padding: 10px;">{{ u['name'] }}</td>
         <td style="padding: 10px;">{{ u['username'] }}</td>
-        <td style="padding: 10px;">{{ 'Head Admin' if u['username']|lower == 'admin' else ('Sample University' if u['username']|lower == 'suk_uni' else 'User') }}</td>
+        <td style="padding: 10px;">{{ 'Head Admin' if u['username']|lower == 'admin' else ('University' if u['username']|lower == 'suk_uni' else 'User') }}</td>
       </tr>
       {% endfor %}
     </tbody>
