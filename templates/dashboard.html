@@ -38,23 +38,34 @@
 
 {% if is_admin and all_users %}
 <div style="margin-top: 2rem; background: #fff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 10px rgba(0,0,0,0.06);">
-  <h3 style="margin-bottom: 1rem; color: #1e3a8a;">Registered Accounts (Head Admin View — {{ all_users|length }} Users)</h3>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <h3 style="margin: 0; color: #1e3a8a;">Registered Accounts (Head Admin View — {{ all_users|length }} Users)</h3>
+    <a href="{{ url_for('students') }}" style="font-size: 0.9rem; color: #2563eb; font-weight: 600; text-decoration: none;">View All Students →</a>
+  </div>
   <table style="width: 100%; border-collapse: collapse;">
     <thead>
       <tr style="background: #eff6ff; text-align: left;">
-        <th style="padding: 10px;">ID</th>
+        <th style="padding: 10px;">#</th>
         <th style="padding: 10px;">Full Name</th>
         <th style="padding: 10px;">Username</th>
         <th style="padding: 10px;">Role</th>
+        <th style="padding: 10px;">Students Added</th>
+        <th style="padding: 10px;">Action</th>
       </tr>
     </thead>
     <tbody>
       {% for u in all_users %}
       <tr style="border-bottom: 1px solid #e5e7eb;">
-        <td style="padding: 10px;">{{ u['id'] }}</td>
-        <td style="padding: 10px;">{{ u['name'] }}</td>
+        <td style="padding: 10px;">{{ loop.index }}</td>
+        <td style="padding: 10px; font-weight: 600;">{{ u['name'] }}</td>
         <td style="padding: 10px;">{{ u['username'] }}</td>
         <td style="padding: 10px;">{{ 'Head Admin' if u['username']|lower == 'admin' else ('University' if u['username']|lower == 'suk_uni' else 'User') }}</td>
+        <td style="padding: 10px;">{{ u['student_count'] }}</td>
+        <td style="padding: 10px;">
+          <a href="{{ url_for('students', user_id=u['id']) }}" style="background: #2563eb; color: #fff; padding: 5px 12px; border-radius: 6px; text-decoration: none; font-size: 0.85rem;">
+            View Students
+          </a>
+        </td>
       </tr>
       {% endfor %}
     </tbody>
