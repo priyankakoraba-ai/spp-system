@@ -193,8 +193,12 @@ def is_admin():
 
 def owner_clause():
     if is_admin():
+        uid_filter = request.args.get('user_id', '').strip()
+        if uid_filter.isdigit():
+            return 'user_id=?', [int(uid_filter)]
         return '1=1', []
     return 'user_id=?', [session.get('user_id')]
+
 
 def get_student_for_user(c, sid):
     clause, params = owner_clause()
@@ -436,18 +440,24 @@ def dashboard():
     bins=[sum(1 for v in attendance_values if v < 70),sum(1 for v in attendance_values if 70 <= v < 80),sum(1 for v in attendance_values if 80 <= v < 90),sum(1 for v in attendance_values if v >= 90)]
     attendance_total=len(attendance_values) or 1
     attendance_pct=[round(v*100/attendance_total,1) for v in bins]
+    viewing_user = None
+    uid_filter = request.args.get('user_id', '').strip()
+    if is_admin() and uid_filter.isdigit():
+        viewing_user = c.execute('SELECT id, name, username FROM users WHERE id=?', (int(uid_filter),)).fetchone()
     all_users = c.execute('''
-     SELECT u.id, u.name, u.username, COUNT(s.id) AS student_count
-     FROM users u
-     LEFT JOIN students s ON s.user_id = u.id
-     WHERE LOWER(TRIM(u.username)) != 'admin'
-     GROUP BY u.id, u.name, u.username
-     ORDER BY u.id ASC
- ''').fetchall() if is_admin() else []
+        SELECT u.id, u.name, u.username, COUNT(s.id) AS student_count
+        FROM users u
+        LEFT JOIN students s ON s.user_id = u.id
+        WHERE LOWER(TRIM(u.username)) != 'admin'
+        GROUP BY u.id, u.name, u.username
+        ORDER BY u.id ASC
+    ''').fetchall() if (is_admin() and not viewing_user) else []
+
     c.close()
     perf_total=total or 1
     perf_pct=[round(very_good*100/perf_total,1),round(good*100/perf_total,1),round(average*100/perf_total,1),round(poor*100/perf_total,1)]
-    return render_template('dashboard.html',total=total,very_good=very_good,good=good,average=average,poor=poor,score=round(avg,1),students=recent,attendance_bins=bins,attendance_pct=attendance_pct,perf_pct=perf_pct,is_admin=is_admin(),all_users=all_users)
+    return render_template('dashboard.html',total=total,very_good=very_good,good=good,average=average,poor=poor,score=round(avg,1),students=recent,attendance_bins=bins,attendance_pct=attendance_pct,perf_pct=perf_pct,is_admin=is_admin(),all_users=all_users,viewing_user=viewing_user)
+
 
 @app.route('/add-student',methods=['GET','POST'])
 def add_student():
@@ -659,6 +669,11 @@ def analytics():
     attendance_counts=[sum(1 for v in attendance_values if v >= 90),sum(1 for v in attendance_values if 75 <= v < 90),sum(1 for v in attendance_values if v < 75)]
     attendance_pct=[round(n*100/attendance_total,1) if attendance_total else 0 for n in attendance_counts]
     avg_attendance=round(sum(attendance_values)/attendance_total,1) if attendance_total else 0
+    viewing_user = None
+    uid_filter = request.args.get('user_id', '').strip()
+    if is_admin() and uid_filter.isdigit():
+    viewing_user = c.execute('SELECT id, name, username FROM users WHERE id=?', (int(uid_filter),)).fetchone()
+
     c.close()
     subject_names=['PIC (Programming in C)','AIA (Artificial Intelligence & Applications)','English','Mathematics','Physics','Electronics & Communication (EC)','Mechanical (ME)']
     sums={name:[] for name in subject_names}
@@ -676,7 +691,8 @@ def analytics():
     elective_values=sums['Electronics & Communication (EC)'] + sums['Mechanical (ME)']
     subject_avgs.append(round(sum(elective_values)/len(elective_values),1) if elective_values else 0)
     performance_pct=[round(n*100/total,1) if total else 0 for n in [very_good,good,average,poor]]
-    return render_template('analytics.html',very_good=very_good,good=good,average=average,poor=poor,total=total,subject_avgs=subject_avgs,attendance_counts=attendance_counts,attendance_pct=attendance_pct,attendance_total=attendance_total,avg_attendance=avg_attendance,performance_pct=performance_pct)
+    return render_template('analytics.html',very_good=very_good,good=good,average=average,poor=poor,total=total,subject_avgs=subject_avgs,attendance_counts=attendance_counts,attendance_pct=attendance_pct,attendance_total=attendance_total,avg_attendance=avg_attendance,performance_pct=performance_pct,viewing_user=viewing_user)
+
 
 init()
 

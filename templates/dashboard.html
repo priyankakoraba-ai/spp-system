@@ -1,8 +1,26 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="dash-page">
+  {% if viewing_user %}
+  <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 12px 18px; margin-bottom: 1.2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+    <span style="color: #1e3a8a; font-weight: 600;">
+      Viewing Dashboard For: {{ viewing_user['name'] }} ({{ viewing_user['username'] }})
+    </span>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+      <a href="{{ url_for('analytics', user_id=viewing_user['id']) }}" style="background: #0d9488; color: #fff; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600;">
+        View Analytics
+      </a>
+      <a href="{{ url_for('students', user_id=viewing_user['id']) }}" style="background: #2563eb; color: #fff; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600;">
+        View Students
+      </a>
+      <a href="{{ url_for('dashboard') }}" style="background: #475569; color: #fff; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600;">
+        ← Back to Admin Dashboard
+      </a>
+    </div>
+  </div>
+  {% endif %}
   <section class="dash-welcome">
-    <div class="dash-welcome-text"><span class="dash-wave">👋</span><div><h1>Welcome back, {{session.get('user_name','Admin')}}!</h1><p>Here’s an overview of student performance.</p></div></div>
+    <div class="dash-welcome-text"><span class="dash-wave">👋</span><div><h1>Welcome back, {{ viewing_user['name'] if viewing_user else session.get('user_name','Admin') }}!</h1><p>Here’s an overview of student performance.</p></div></div>
     <div class="dash-date-chip"><span>📅</span><span id="dashboard-date">Loading date…</span></div>
   </section>
   <section class="dash-stat-grid" aria-label="Student summary">
@@ -29,7 +47,7 @@
     </article>
   </section>
   <section class="dash-panel dash-recent-panel">
-    <div class="dash-recent-heading"><h2><span>👥</span> Recent Students</h2><a class="dash-view-all" href="{{url_for('students')}}">View All →</a></div>
+    <div class="dash-recent-heading"><h2><span>👥</span> Recent Students</h2><a class="dash-view-all" href="{{ url_for('students', user_id=viewing_user['id']) if viewing_user else url_for('students') }}">View All →</a></div>
     <div class="dash-table-wrap"><table class="dash-recent-table"><thead><tr><th>Name</th><th>USN</th><th>Department</th><th>Prediction</th></tr></thead><tbody>
       {% for s in students %}<tr><td>{{s.name}}</td><td>{{s.usn or '—'}}</td><td>{{s.department}}</td><td><span class="pill {{s.prediction|lower|replace(' ','-')}}">{{s.prediction}}</span></td></tr>{% else %}<tr><td colspan="4" class="dash-empty">No students yet.</td></tr>{% endfor %}
     </tbody></table></div>
@@ -61,9 +79,15 @@
         <td style="padding: 10px;">{{ u['username'] }}</td>
         <td style="padding: 10px;">{{ 'University' if u['username']|lower == 'suk_uni' else 'User' }}</td>
         <td style="padding: 10px;">{{ u['student_count'] }}</td>
-        <td style="padding: 10px; display: flex; gap: 8px; align-items: center;">
+                <td style="padding: 10px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+          <a href="{{ url_for('dashboard', user_id=u['id']) }}" style="background: #0d9488; color: #fff; padding: 5px 12px; border-radius: 6px; text-decoration: none; font-size: 0.85rem;">
+            View Dashboard
+          </a>
           <a href="{{ url_for('students', user_id=u['id']) }}" style="background: #2563eb; color: #fff; padding: 5px 12px; border-radius: 6px; text-decoration: none; font-size: 0.85rem;">
             View Students
+          </a>
+          <a href="{{ url_for('analytics', user_id=u['id']) }}" style="background: #7c3aed; color: #fff; padding: 5px 12px; border-radius: 6px; text-decoration: none; font-size: 0.85rem;">
+            View Analytics
           </a>
           {% if u['username']|lower != 'suk_uni' %}
           <form method="POST" action="{{ url_for('delete_user', uid=u['id']) }}" style="margin: 0;" onsubmit="return confirm('Delete user {{ u['username'] }} and all their added students permanently?');">
