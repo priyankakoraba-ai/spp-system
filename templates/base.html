@@ -45,7 +45,10 @@
                 System</span></div>
         <div><a href="{{url_for('home')}}">Home</a><a href="{{url_for('login')}}">Login</a><a
                 href="{{url_for('register')}}">Register</a>
-            <a href="{{ url_for('admin_login') }}">Admin Login</a>
+            <a href="{{ url_for('admin_login') }}"
+                style="display: inline-flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.16); border: 1px solid rgba(255, 255, 255, 0.45); color: #ffffff; padding: 6px 14px; border-radius: 999px; font-weight: 600; font-size: 0.9rem; text-decoration: none; transition: background 0.2s;">
+                <span>🔒</span> Admin Login
+            </a>
         </div>
     </nav>
     {% with ms=get_flashed_messages(with_categories=true) %}{% for c,m in ms %}<div class="flash public-flash {{c}}">
