@@ -565,9 +565,20 @@ def student_detail(sid):
 def search_students():
     clause, params = owner_clause()
     uid_filter = request.args.get('user_id', '').strip()
-    if is_admin() and uid_filter.isdigit():
-        clause = 'user_id=?'
-        params = [int(uid_filter)]
+    if is_admin():
+        if uid_filter.isdigit():
+            clause = 'user_id=?'
+            params = [int(uid_filter)]
+        elif uid_filter != 'all':
+            c_tmp = db()
+            uni_row = c_tmp.execute(
+                "SELECT id FROM users WHERE LOWER(TRIM(username)) = ? OR LOWER(name) LIKE ? ORDER BY id ASC LIMIT 1",
+                ('suk_uni', '%sharanbasva%')
+            ).fetchone()
+            c_tmp.close()
+            if uni_row:
+                clause = 'user_id=?'
+                params = [uni_row['id']]
     q=request.args.get('q','').strip(); pf=request.args.get('prediction','').strip(); sql=f'SELECT * FROM students WHERE {clause}'
     if q: sql+=' AND (name LIKE ? OR roll_no LIKE ? OR usn LIKE ? OR department LIKE ?)'; params += [f'%{q}%']*4
     if pf in ('Very Good','Good','Average','Poor'): sql+=' AND prediction=?';params.append(pf)
