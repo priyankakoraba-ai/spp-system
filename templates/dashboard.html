@@ -39,7 +39,7 @@
 {% if is_admin and all_users %}
 <div style="margin-top: 2rem; background: #fff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 10px rgba(0,0,0,0.06);">
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-    <h3 style="margin: 0; color: #1e3a8a;">Registered Accounts (Head Admin View — {{ all_users|length }} Users)</h3>
+    <h3 style="margin: 0; color: #1e3a8a;">Registered Accounts ({{ all_users|length }})</h3>
     <a href="{{ url_for('students') }}" style="font-size: 0.9rem; color: #2563eb; font-weight: 600; text-decoration: none;">View All Students →</a>
   </div>
   <table style="width: 100%; border-collapse: collapse;">
@@ -59,12 +59,19 @@
         <td style="padding: 10px;">{{ loop.index }}</td>
         <td style="padding: 10px; font-weight: 600;">{{ u['name'] }}</td>
         <td style="padding: 10px;">{{ u['username'] }}</td>
-        <td style="padding: 10px;">{{ 'Head Admin' if u['username']|lower == 'admin' else ('University' if u['username']|lower == 'suk_uni' else 'User') }}</td>
+        <td style="padding: 10px;">{{ 'University' if u['username']|lower == 'suk_uni' else 'User' }}</td>
         <td style="padding: 10px;">{{ u['student_count'] }}</td>
-        <td style="padding: 10px;">
+        <td style="padding: 10px; display: flex; gap: 8px; align-items: center;">
           <a href="{{ url_for('students', user_id=u['id']) }}" style="background: #2563eb; color: #fff; padding: 5px 12px; border-radius: 6px; text-decoration: none; font-size: 0.85rem;">
             View Students
           </a>
+          {% if u['username']|lower != 'suk_uni' %}
+          <form method="POST" action="{{ url_for('delete_user', uid=u['id']) }}" style="margin: 0;" onsubmit="return confirm('Delete user {{ u['username'] }} and all their added students permanently?');">
+            <button type="submit" style="background: #dc2626; color: #fff; border: none; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">
+              Delete
+            </button>
+          </form>
+          {% endif %}
         </td>
       </tr>
       {% endfor %}

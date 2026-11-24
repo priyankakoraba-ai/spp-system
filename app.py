@@ -440,6 +440,7 @@ def dashboard():
      SELECT u.id, u.name, u.username, COUNT(s.id) AS student_count
      FROM users u
      LEFT JOIN students s ON s.user_id = u.id
+     WHERE LOWER(TRIM(u.username)) != 'admin'
      GROUP BY u.id, u.name, u.username
      ORDER BY u.id ASC
  ''').fetchall() if is_admin() else []
@@ -598,6 +599,30 @@ def delete(sid):
     c=db(); clause, params = owner_clause()
     c.execute(f'DELETE FROM students WHERE id=? AND {clause}', [sid] + params)
     c.commit();c.close();flash('Student deleted.','success');return redirect(url_for('students'))
+
+@app.route('/delete-user/<int:uid>', methods=['POST'])
+def delete_user(uid):
+    g = guard()
+    if g: return g
+    if not is_admin():
+        flash('Unauthorized access.', 'error')
+        return redirect(url_for('dashboard'))
+    c = db()
+    target = c.execute('SELECT id, username FROM users WHERE id=?', (uid,)).fetchone()
+    if not target:
+        c.close()
+        flash('User not found.', 'error')
+        return redirect(url_for('dashboard'))
+    if (target['username'] or '').strip().lower() in ('admin', 'suk_uni'):
+        c.close()
+        flash('Protected system accounts (admin and suk_uni) cannot be deleted.', 'error')
+        return redirect(url_for('dashboard'))
+    c.execute('DELETE FROM students WHERE user_id=?', (uid,))
+    c.execute('DELETE FROM users WHERE id=?', (uid,))
+    c.commit()
+    c.close()
+    flash(f"User '{target['username']}' and their student records have been deleted.", 'success')
+    return redirect(url_for('dashboard'))
 
 @app.route('/analytics')
 def analytics():
