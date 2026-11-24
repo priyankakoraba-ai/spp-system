@@ -401,6 +401,28 @@ def login():
         flash('Invalid username or password.','error')
     return render_template('login.html')
 
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if session.get('user_id') and is_admin():
+        return redirect(url_for('dashboard'))
+    if request.method == 'POST':
+        u = request.form.get('username', '').strip()
+        p = request.form.get('password', '')
+        if u.lower() != 'admin':
+            flash('Access denied. This portal is restricted to Head Admin only.', 'error')
+            return render_template('admin_login.html')
+        c = db()
+        user = c.execute('SELECT * FROM users WHERE LOWER(TRIM(username)) = ?', ('admin',)).fetchone()
+        c.close()
+        if user and check_password_hash(user['password'], p):
+            session['user_id'] = user['id']
+            session['user_name'] = user['name']
+            session['username'] = user['username']
+            return redirect(url_for('dashboard'))
+        flash('Invalid Admin credentials.', 'error')
+    return render_template('admin_login.html')
+
+
 @app.route('/logout')
 def logout(): session.clear(); return redirect(url_for('home'))
 
