@@ -74,7 +74,10 @@ class PgCursorWrapper:
         is_insert = pg_sql.strip().upper().startswith('INSERT INTO')
         if is_insert and 'RETURNING' not in pg_sql.upper():
             pg_sql = pg_sql.rstrip().rstrip(';') + ' RETURNING id'
-        self._cur.execute(pg_sql, params)
+        if params:
+            self._cur.execute(pg_sql, params)
+        else:
+            self._cur.execute(pg_sql)
         if is_insert:
             row = self._cur.fetchone()
             self.lastrowid = row['id'] if row else None
@@ -111,11 +114,11 @@ def db():
 def assign_sample_students_to_suk_uni(c):
     """Links the 36 sample records to suk_uni (Sharanbasva University) while keeping Head Admin view open."""
     uni_row = c.execute(
-        "SELECT id FROM users WHERE LOWER(TRIM(username)) = 'suk_uni' OR LOWER(name) LIKE '%sharanbasva%' ORDER BY id ASC LIMIT 1"
+        "SELECT id FROM users WHERE LOWER(TRIM(username)) = ? OR LOWER(name) LIKE ? ORDER BY id ASC LIMIT 1",
+        ('suk_uni', '%sharanbasva%')
     ).fetchone()
     if uni_row:
         c.execute("UPDATE students SET user_id = ? WHERE user_id = 1 OR user_id IS NULL", (uni_row['id'],))
-
 def init():
     c = db()
     if DATABASE_URL and psycopg2:
