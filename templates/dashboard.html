@@ -36,3 +36,29 @@
   </section>
 </div>
 {% endblock %}
+
+{% if is_admin and all_users %}
+<div style="margin-top: 2rem; background: #fff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 10px rgba(0,0,0,0.06);">
+  <h3 style="margin-bottom: 1rem; color: #1e3a8a;">Registered Accounts (Head Admin View — {{ all_users|length }} Users)</h3>
+  <table style="width: 100%; border-collapse: collapse;">
+    <thead>
+      <tr style="background: #eff6ff; text-align: left;">
+        <th style="padding: 10px;">ID</th>
+        <th style="padding: 10px;">Full Name</th>
+        <th style="padding: 10px;">Username</th>
+        <th style="padding: 10px;">Role</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in all_users %}
+      <tr style="border-bottom: 1px solid #e5e7eb;">
+        <td style="padding: 10px;">{{ u['id'] }}</td>
+        <td style="padding: 10px;">{{ u['name'] }}</td>
+        <td style="padding: 10px;">{{ u['username'] }}</td>
+        <td style="padding: 10px;">{{ 'Head Admin' if u['username']|lower == 'admin' else ('Sample University' if u['username']|lower == 'suk_uni' else 'User') }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
