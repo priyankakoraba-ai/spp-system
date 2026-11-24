@@ -1,5 +1,12 @@
 # 🎓 Student Performance Prediction System
 
+[![Live Demo](https://shields.io)](https://vercel.app)
+[![Python](https://shields.io)](https://python.org)
+[![Flask](https://shields.io)](https://palletsprojects.com)
+[![scikit-learn](https://shields.io)](https://scikit-learn.org)
+[![PostgreSQL](https://shields.io)](https://neon.tech)
+[![License: MIT](https://shields.io)](LICENSE)
+
 A full-stack, machine-learning-powered web application built with **Flask**, **scikit-learn**, and **Neon PostgreSQL / SQLite** that predicts student academic performance (`Very Good`, `Good`, `Average`, `Poor`), generates personalized study recommendations, visualizes class analytics, supports multi-role administration, and exports individual PDF performance reports.
 
 
