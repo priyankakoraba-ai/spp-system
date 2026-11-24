@@ -1,18 +1,32 @@
 {% extends 'base.html' %}{% block content %}
+{% if viewing_user %}
+<div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 12px 18px; margin-bottom: 1.2rem; display: flex; justify-content: space-between; align-items: center;">
+  <span style="color: #1e3a8a; font-weight: 600;">
+    Viewing Students Added By: {{ viewing_user['name'] }} ({{ viewing_user['username'] }})
+  </span>
+  <a href="{{ url_for('dashboard') }}" style="background: #2563eb; color: #fff; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600;">
+    ← Back to Admin Dashboard
+  </a>
+</div>
+{% endif %}
 <section class="page-card prediction-list-card">
     <div class="section-heading-row">
         <div>
-            <h2>All Students – Prediction Results</h2>
+            <h2>{% if viewing_user %}{{ viewing_user['name'] }} – Prediction Results{% else %}All Students – Prediction Results{% endif %}</h2>
             <p class="muted-text">View the overall performance summary of every student. Select <b>View Result</b> to
                 check one student's complete performance and suggestions.</p>
         </div>
     </div>
-    <form class="searchbar" method="get"><input name="q" value="{{q}}" placeholder="Search student..."><select
-            name="prediction">
+    <form class="searchbar" method="get">
+        {% if request.args.get('user_id') %}<input type="hidden" name="user_id" value="{{ request.args.get('user_id') }}">{% endif %}
+        <input name="q" value="{{q}}" placeholder="Search student...">
+        <select name="prediction">
             <option value="">All predictions</option>{% for p in ['Very Good','Good','Average','Poor'] %}<option
                 value="{{p}}" {% if pred_filter==p %}selected{% endif %}>{{p}}</option>{% endfor %}
-        </select><button class="btn">Search</button><a class="btn light"
-            href="{{url_for('export_csv',q=q,prediction=pred_filter)}}">Export</a></form>
+        </select>
+        <button class="btn">Search</button>
+        <a class="btn light" href="{{url_for('export_csv',q=q,prediction=pred_filter,user_id=request.args.get('user_id',''))}}">Export</a>
+    </form>
     <div class="table-scroll">
         <table class="full-table prediction-table">
             <tr>
@@ -51,14 +65,3 @@
         </table>
     </div>
 </section>{% endblock %}
-
-{% if viewing_user %}
-<div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 12px 18px; margin-bottom: 1.2rem; display: flex; justify-content: space-between; align-items: center;">
-  <span style="color: #1e3a8a; font-weight: 600;">
-    Viewing Students Added By: {{ viewing_user['name'] }} ({{ viewing_user['username'] }})
-  </span>
-  <a href="{{ url_for('dashboard') }}" style="background: #2563eb; color: #fff; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600;">
-    ← Back to Admin Dashboard
-  </a>
-</div>
-{% endif %}
