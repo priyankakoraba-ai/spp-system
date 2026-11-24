@@ -436,7 +436,13 @@ def dashboard():
     bins=[sum(1 for v in attendance_values if v < 70),sum(1 for v in attendance_values if 70 <= v < 80),sum(1 for v in attendance_values if 80 <= v < 90),sum(1 for v in attendance_values if v >= 90)]
     attendance_total=len(attendance_values) or 1
     attendance_pct=[round(v*100/attendance_total,1) for v in bins]
-    all_users = c.execute('SELECT id, name, username FROM users ORDER BY id ASC').fetchall() if is_admin() else []
+    all_users = c.execute('''
+     SELECT u.id, u.name, u.username, COUNT(s.id) AS student_count
+     FROM users u
+     LEFT JOIN students s ON s.user_id = u.id
+     GROUP BY u.id, u.name, u.username
+     ORDER BY u.id ASC
+ ''').fetchall() if is_admin() else []
     c.close()
     perf_total=total or 1
     perf_pct=[round(very_good*100/perf_total,1),round(good*100/perf_total,1),round(average*100/perf_total,1),round(poor*100/perf_total,1)]
@@ -557,11 +563,14 @@ def student_detail(sid):
 
 def search_students():
     clause, params = owner_clause()
+    uid_filter = request.args.get('user_id', '').strip()
+    if is_admin() and uid_filter.isdigit():
+        clause = 'user_id=?'
+        params = [int(uid_filter)]
     q=request.args.get('q','').strip(); pf=request.args.get('prediction','').strip(); sql=f'SELECT * FROM students WHERE {clause}'
     if q: sql+=' AND (name LIKE ? OR roll_no LIKE ? OR usn LIKE ? OR department LIKE ?)'; params += [f'%{q}%']*4
     if pf in ('Very Good','Good','Average','Poor'): sql+=' AND prediction=?';params.append(pf)
     c=db(); rows=c.execute(sql+' ORDER BY CAST(TRIM(roll_no) AS INTEGER) ASC, roll_no COLLATE NOCASE ASC, id ASC',params).fetchall();c.close();return rows,q,pf
-
 @app.route('/students')
 def students():
     g=guard()
