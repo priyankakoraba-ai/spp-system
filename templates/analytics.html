@@ -1,5 +1,23 @@
 {% extends 'base.html' %}
 {% block content %}
+{% if viewing_user %}
+<div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 12px 18px; margin-bottom: 1.2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+  <span style="color: #1e3a8a; font-weight: 600;">
+    Viewing Analytics For: {{ viewing_user['name'] }} ({{ viewing_user['username'] }})
+  </span>
+  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+    <a href="{{ url_for('dashboard', user_id=viewing_user['id']) }}" style="background: #0d9488; color: #fff; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600;">
+      View Dashboard
+    </a>
+    <a href="{{ url_for('students', user_id=viewing_user['id']) }}" style="background: #2563eb; color: #fff; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600;">
+      View Students
+    </a>
+    <a href="{{ url_for('dashboard') }}" style="background: #475569; color: #fff; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600;">
+      ← Back to Admin Dashboard
+    </a>
+  </div>
+</div>
+{% endif %}
 <section class="page-card analytics-page">
   <div class="analytics-hero">
     <div>
@@ -103,22 +121,4 @@
     </div>
   </div>
 </section>
-{% if viewing_user %}
-<div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 12px 18px; margin-bottom: 1.2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-  <span style="color: #1e3a8a; font-weight: 600;">
-    Viewing Analytics For: {{ viewing_user['name'] }} ({{ viewing_user['username'] }})
-  </span>
-  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-    <a href="{{ url_for('dashboard', user_id=viewing_user['id']) }}" style="background: #0d9488; color: #fff; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600;">
-      View Dashboard
-    </a>
-    <a href="{{ url_for('students', user_id=viewing_user['id']) }}" style="background: #2563eb; color: #fff; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600;">
-      View Students
-    </a>
-    <a href="{{ url_for('dashboard') }}" style="background: #475569; color: #fff; padding: 6px 14px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600;">
-      ← Back to Admin Dashboard
-    </a>
-  </div>
-</div>
-{% endif %}
 {% endblock %}
