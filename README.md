@@ -1,8 +1,12 @@
 # 🎓 Student Performance Prediction System
 
-A full-stack, machine-learning-powered web application built with **Flask**, **scikit-learn**, and **PostgreSQL / SQLite** that predicts student academic performance (`Very Good`, `Good`, `Average`, `Poor`), generates personalized study recommendations, visualizes class analytics, and exports individual PDF performance reports.
+A full-stack, machine-learning-powered web application built with **Flask**, **scikit-learn**, and **Neon PostgreSQL / SQLite** that predicts student academic performance (`Very Good`, `Good`, `Average`, `Poor`), generates personalized study recommendations, visualizes class analytics, supports multi-role administration, and exports individual PDF performance reports.
 
-🌐 **Live Demo:** [https://vercel.app](https://vercel.app)
+
+🌐 **Live demo App:** [https://spp-system.vercel.app/](https://spp-system.vercel.app/)  
+🔐 **User / University Login:** [https://spp-system.vercel.app/login](https://spp-system.vercel.app/login)  
+🛡️ **Head Admin Portal:** [https://spp-system.vercel.app/admin/login](https://spp-system.vercel.app/admin/login)
+
 
 ---
 
@@ -16,19 +20,24 @@ A full-stack, machine-learning-powered web application built with **Flask**, **s
   - **1 Open Elective:** Electronics & Communication (`EC`) **or** Mechanical (`ME`).
 - Automatically generates actionable, personalized academic improvement tips based on weak metrics.
 
-### 🔐 Role-Based Multi-User Architecture
-- **Head Admin (`admin`):**
-  - System-wide visibility across all student records and analytics.
-  - Dashboard **Registered Accounts** panel displaying all registered accounts (`University` and `User` roles), student counts, one-click **`View Students`** filtering per user, and protected **`Delete`** controls for regular user accounts.
+### 🔐 Strict Multi-Role Architecture & Dedicated Portals
+- **Head Admin (`admin`) — Dedicated `/admin/login` Portal:**
+  - Restricted administrator login portal (`🔒 Admin Login`) separated from standard user login.
+  - Defaults **Students** and **Predictions** lists cleanly to the primary university dataset (`Sharanbasva University`) while allowing one-click viewing of all combined records (`View All Students →`).
+  - **Registered Accounts Panel** on the Admin Dashboard displaying all registered accounts (`University` and `User` roles), student counts per account, and direct per-user inspection controls:
+    - **`View Dashboard`:** Opens any user's complete KPI summary, performance charts, and recent students.
+    - **`View Students`:** Filters the student prediction table to a specific user's entries with a context banner and quick navigation controls.
+    - **`View Analytics`:** Displays subject-wise averages, attendance distributions, and performance insights for a specific user.
+    - **`Delete`:** Safely removes regular test/user accounts and their associated student records while protecting system accounts (`admin` and `suk_uni`).
 - **University Account (`suk_uni` — Sharanbasva University):**
   - Preloaded with 36 baseline student records and full CRUD, analytics, and reporting capabilities.
 - **Standard Users (Faculty / Evaluators):**
-  - Isolated workspace starting with a clean dashboard (`0` students), allowing independent creation, editing, prediction, and reporting without affecting other accounts.
+  - Isolated workspace starting with a clean dashboard (`0` students), allowing independent student creation, editing, prediction, and reporting without affecting other accounts.
 - **Account Recovery:** Built-in **Forgot Password** and **Forgot Username** verification flows.
 
 ### 📊 Interactive Analytics, Search & Reporting
-- **Dashboard & Analytics:** Real-time KPI cards, performance category distribution charts, attendance bracket breakdowns, and subject-wise average performance comparisons.
-- **Search & Filtering:** Instant search by Student Name, Roll Number, USN, or Department, plus filtering by predicted performance tier.
+- **Dashboard & Analytics:** Real-time KPI cards, performance category distribution donut charts, attendance bracket breakdowns, and subject-wise average comparisons.
+- **Context-Preserving Search & Filtering:** Instant search by Student Name, Roll Number, USN, or Department, plus filtering by predicted performance tier (`Very Good`, `Good`, `Average`, `Poor`) while preserving active Admin user filters.
 - **Export Capabilities:**
   - **Individual PDF Reports:** Downloadable, formatted A4 Student Performance Reports generated via **ReportLab**.
   - **Bulk CSV Export:** One-click export of filtered student records and subject marks to `students.csv`.
@@ -42,7 +51,7 @@ A full-stack, machine-learning-powered web application built with **Flask**, **s
 | **Backend** | Python 3, Flask, Werkzeug Security |
 | **Machine Learning** | scikit-learn, NumPy, Joblib |
 | **Database** | Neon Serverless PostgreSQL (`psycopg2-binary`) in production; SQLite (`database.db`) for local development |
-| **Frontend** | HTML5, CSS3, Jinja2 Templates, Chart.js |
+| **Frontend** | HTML5, CSS3, Jinja2 Templates |
 | **Reporting** | ReportLab (PDF generation), Python `csv` module |
 | **Deployment** | Vercel (Serverless Python Runtime) + GitHub CI/CD |
 
@@ -52,14 +61,24 @@ A full-stack, machine-learning-powered web application built with **Flask**, **s
 
 ```text
 spp_system/
-├── app.py                  # Main Flask application, routes, RBAC, and DB layer
+├── app.py                  # Main Flask application, RBAC, Admin portals, and dual DB layer
 ├── model.py                # Machine learning model training script
 ├── performance_model.pkl   # Serialized scikit-learn prediction model
 ├── database.db             # Local SQLite database with sample seed data
 ├── requirements.txt        # Python dependencies for Vercel deployment
 ├── vercel.json             # Vercel serverless routing configuration
 ├── static/                 # CSS stylesheets, JS scripts, and assets
-└── templates/              # Jinja2 HTML templates (dashboard, students, analytics, auth)
+└── templates/              # Jinja2 HTML templates
+    ├── base.html           # Shared layout and navigation bar (including Admin Login)
+    ├── index.html          # Landing page
+    ├── login.html          # Standard User & University login page
+    ├── admin_login.html    # Dedicated Head Admin login portal
+    ├── register.html       # New user registration page
+    ├── dashboard.html      # Role-aware dashboard & Admin Registered Accounts table
+    ├── students.html       # Student prediction directory with user context banner
+    ├── analytics.html      # Visual performance & subject analytics with user banner
+    ├── prediction.html     # Individual student prediction & PDF report view
+    └── student_detail.html # Add / Edit student form
 ```
 
 ---
@@ -102,7 +121,7 @@ spp_system/
 ## ☁️ Production Deployment (Vercel + Neon PostgreSQL)
 
 1. Push the repository to GitHub and import it into **Vercel**.
-2. Create a free PostgreSQL database on **Neon** and copy the connection string.
+2. Create a PostgreSQL database on **Neon** and copy the connection string.
 3. Add the following **Environment Variables** in Vercel (`Project Settings → Environment Variables`):
    - `DATABASE_URL`: Your Neon PostgreSQL connection string (`postgresql://...`)
    - `SECRET_KEY`: A strong random string for Flask session encryption
