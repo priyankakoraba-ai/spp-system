@@ -588,7 +588,13 @@ def students():
     g=guard()
     if g:return g
     rows, q, pf = search_students()
-    return render_template('students.html', students=build_student_rows(rows), q=q, pred_filter=pf)
+    viewing_user = None
+    uid_filter = request.args.get('user_id', '').strip()
+    if is_admin() and uid_filter.isdigit():
+        c = db()
+        viewing_user = c.execute('SELECT id, name, username FROM users WHERE id=?', (int(uid_filter),)).fetchone()
+        c.close()
+    return render_template('students.html', students=build_student_rows(rows), q=q, pred_filter=pf, viewing_user=viewing_user)
 
 @app.route('/export')
 def export_csv():
