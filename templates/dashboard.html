@@ -90,7 +90,7 @@
             View Analytics
           </a>
           {% if u['username']|lower != 'suk_uni' %}
-          <form method="POST" action="{{ url_for('delete_user', uid=u['id']) }}" style="margin: 0;" onsubmit="return confirm('Delete user {{ u['username'] }} and all their added students permanently?');">
+          <form method="POST" action="{{ url_for('delete_user', uid=u['id']) }}" style="margin: 0;" onsubmit="return confirm('Delete user {{ u.username }} and all their added students permanently?');">
             <button type="submit" style="background: #dc2626; color: #fff; border: none; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">
               Delete
             </button>
