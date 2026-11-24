@@ -672,7 +672,7 @@ def analytics():
     viewing_user = None
     uid_filter = request.args.get('user_id', '').strip()
     if is_admin() and uid_filter.isdigit():
-    viewing_user = c.execute('SELECT id, name, username FROM users WHERE id=?', (int(uid_filter),)).fetchone()
+        viewing_user = c.execute('SELECT id, name, username FROM users WHERE id=?', (int(uid_filter),)).fetchone()
 
     c.close()
     subject_names=['PIC (Programming in C)','AIA (Artificial Intelligence & Applications)','English','Mathematics','Physics','Electronics & Communication (EC)','Mechanical (ME)']
