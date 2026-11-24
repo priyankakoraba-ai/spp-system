@@ -552,15 +552,6 @@ def student_detail(sid):
     c=db(); st=get_student_for_user(c, sid);c.close()
     if not st: flash('Student not found.','error'); return redirect(url_for('students'))
 
-
-    @app.route('/student/<int:sid>')
-def student_detail(sid):
-    g=guard()
-    if g:return g
-    c=db(); st=get_student_for_user(c, sid);c.close()
-    if not st: flash('Student not found.','error'); return redirect(url_for('students'))
-    return render_template('student_detail.html',student=st,subject_marks=json.loads(st['subject_marks'] or '{}'),metrics=performance_metrics(st),tips=tips(st))
-
 def search_students():
     clause, params = owner_clause()
     q=request.args.get('q','').strip(); pf=request.args.get('prediction','').strip(); sql=f'SELECT * FROM students WHERE {clause}'
