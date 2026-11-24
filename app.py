@@ -394,7 +394,11 @@ def forgot_username():
 @app.route('/login',methods=['GET','POST'])
 def login():
     if request.method=='POST':
-        c=db(); u=c.execute('SELECT * FROM users WHERE username=?',(request.form['username'].strip(),)).fetchone(); c.close()
+        uname = request.form['username'].strip()
+        if uname.lower() == 'admin':
+            flash('Please use the dedicated Head Admin Login portal to sign in as Admin.', 'error')
+            return redirect(url_for('admin_login'))
+        c=db(); u=c.execute('SELECT * FROM users WHERE username=?',(uname,)).fetchone();c.close()
         if u and check_password_hash(u['password'],request.form['password']):
             session['user_id']=u['id']; session['user_name']=u['name']; session['username']=u['username']
             return redirect(url_for('dashboard'))
