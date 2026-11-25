@@ -126,3 +126,22 @@ spp_system/
    - `DATABASE_URL`: Your Neon PostgreSQL connection string (`postgresql://...`)
    - `SECRET_KEY`: A strong random string for Flask session encryption
 4. Deploy—the application automatically initializes the PostgreSQL schema and seeds baseline university records on first boot.
+
+
+---
+
+## 🔒 Data Privacy & Sample Dataset Note
+
+> **Disclaimer:** All preloaded student records, marks, and university profiles (`suk_uni`) included in this application are **synthetic demonstration datasets** created solely for academic evaluation, testing, and visualization purposes. No real student data or personally identifiable information (PII) is stored or used.
+
+---
+
+
+## 👥 Project Team
+
+| Name | Role & Contributions |
+| :--- | :--- |
+| **Priyanka Koraba** ([@priyankakoraba-ai](https://github.com)) | **Sole Developer & Architect** — End-to-end development of the Flask backend, ML prediction model, PostgreSQL database, UI, and Vercel deployment |
+| **[Manasa Pallapur]** | **Testing & Academic Review** — Assisted with academic evaluation parameters and basic functional testing |
+| **[Anushree Gola]** | **Presentation & Coordination** — Assisted with interface feedback, presentation slides, and team coordination |
+
