@@ -142,6 +142,6 @@ spp_system/
 | Name | Role & Contributions |
 | :--- | :--- |
 | **Priyanka Koraba** ([@priyankakoraba-ai](https://github.com)) | **Sole Developer & Architect** — End-to-end development of the Flask backend, ML prediction model, PostgreSQL database, UI, and Vercel deployment |
-| **[Manasa Pallapur]** | **Testing & Academic Review** — Assisted with academic evaluation parameters and basic functional testing |
-| **[Anushree Gola]** | **Presentation & Coordination** — Assisted with interface feedback, presentation slides, and team coordination |
+| **Manasa Pallapur** | **Testing & Academic Review** — Assisted with academic evaluation parameters and basic functional testing |
+| **Anushree Gola** | **Presentation & Coordination** — Assisted with interface feedback, presentation slides, and team coordination |
 
