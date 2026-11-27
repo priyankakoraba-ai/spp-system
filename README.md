@@ -274,3 +274,5 @@ Model performance is dataset-dependent, and category labels derive from the scor
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
+
+This project is currently under development, and further features and improvements are planned for future releases.
