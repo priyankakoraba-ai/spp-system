@@ -88,24 +88,38 @@ The retraining script reports test accuracy and a classification report for an 8
 
 ## Project Structure
 
+नीचे दी गई सूची में repository की सभी tracked files और folders शामिल हैं। हर file/folder के सामने उसका काम दिया गया है।
+
 ```text
 spp-system/
-├── app.py                  # Flask routes, authentication, databases, reports, and RBAC
-├── model.py                # Model training and category generation
-├── performance_model.pkl   # Serialized trained model and feature list
-├── requirements.txt        # Python dependencies
-├── static/
-│   └── style.css
-├── templates/
-│   ├── base.html
-│   ├── dashboard.html
-│   ├── prediction.html
-│   ├── students.html
-│   └── ...
-└── .gitignore
+├── .gitignore                     # Git में शामिल न की जाने वाली local files (जैसे database, secrets और cache) के नियम
+├── LICENSE                        # परियोजना का MIT License और उपयोग/वितरण की शर्तें
+├── README.md                      # परियोजना का परिचय, setup, model, deployment और file-structure दस्तावेज़
+├── app.py                         # Flask application: routes, login, database, student records, predictions, reports और access control
+├── model.py                       # CSV से Random Forest model train करता है और performance_model.pkl बनाता है
+├── performance_model.pkl          # पहले से trained model और उसकी feature-list; prediction के लिए runtime artifact
+├── requirements.txt               # Python application और model के लिए जरूरी packages की सूची
+├── static/                        # Browser को सीधे serve होने वाली static assets का folder
+│   ├── images/                    # Website में इस्तेमाल होने वाली image assets का folder
+│   │   └── student_laptop.png     # Home page पर दिखाया गया student/laptop illustration
+│   └── style.css                  # सभी pages के layout, colors, forms, tables और responsive design की CSS
+└── templates/                     # Flask/Jinja2 HTML templates का folder
+    ├── add_student.html           # Student जोड़ने और मौजूदा student के academic details edit करने का form
+    ├── admin_login.html           # Head admin के restricted portal का login page
+    ├── analytics.html             # Performance, attendance और subject averages के charts/analytics
+    ├── base.html                  # सभी pages का साझा layout, navigation, flash messages और content blocks
+    ├── dashboard.html             # Summary dashboard, performance charts और recent students
+    ├── forgot_password.html       # Username/name verify करके password reset करने का form
+    ├── forgot_username.html       # Registered full name से username ढूँढने का page
+    ├── index.html                 # Public home/landing page और मुख्य feature परिचय
+    ├── login.html                 # Student/university user login form
+    ├── prediction.html            # एक student का prediction, marks, recommendations और PDF export
+    ├── register.html              # नया user account बनाने का registration form
+    ├── student_detail.html        # Student की पूरी performance, subjects और recommendations का विवरण
+    └── students.html              # Student list, search/filter, prediction results और CSV export
 ```
 
-`database.db` is created locally when needed and is ignored by Git. `student_data.csv` is training input and is also ignored by Git.
+`database.db`, `secret.key`, `student_data.csv`, virtual environments और Python cache जैसी files local development या model training के दौरान बनती/इस्तेमाल होती हैं; ये `.gitignore` में होने के कारण tracked project files नहीं हैं। `student_data.csv` केवल model retrain करने के लिए आवश्यक input है।
 
 ## Local Setup
 
