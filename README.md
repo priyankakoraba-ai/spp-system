@@ -2,8 +2,8 @@
 
 A full-stack Flask application for predicting student performance, generating improvement recommendations, and presenting role-based dashboards and reports.
 
-**Live demo:** https://spp-system.vercel.app
-**Student / university login:** https://spp-system.vercel.app/login
+**Live demo:** https://spp-system.vercel.app <br>
+**Student / university login:** https://spp-system.vercel.app/login<br>
 **Head admin login:** https://spp-system.vercel.app/admin/login
 
 > This is an educational prototype. Predictions are decision-support information, not a basis for grading, admissions, discipline, or other high-impact decisions about students.
