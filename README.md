@@ -2,8 +2,8 @@
 
 A full-stack Flask application for predicting student performance, generating improvement recommendations, and presenting role-based dashboards and reports.
 
-**Live demo:** https://spp-system.vercel.app  
-**Student / university login:** https://spp-system.vercel.app/login  
+**Live demo:** https://spp-system.vercel.app
+**Student / university login:** https://spp-system.vercel.app/login
 **Head admin login:** https://spp-system.vercel.app/admin/login
 
 > This is an educational prototype. Predictions are decision-support information, not a basis for grading, admissions, discipline, or other high-impact decisions about students.
@@ -78,7 +78,7 @@ The student must also provide exactly one open elective:
 Training labels are derived from a weighted overall index:
 
 - The mean of attendance, assignment score, previous average, all subject marks, and the open-elective mark is multiplied by 0.9.
-- `study_hours` is clipped to 0–7, scaled to 0–100, and multiplied by 0.1.
+- `study_hours` is clipped to 0-7, scaled to 0-100, and multiplied by 0.1.
 - `Very Good`: at least 85
 - `Good`: at least 70
 - `Average`: at least 50
@@ -88,35 +88,18 @@ The retraining script reports test accuracy and a classification report for an 8
 
 ## Project Structure
 
-The list below includes all tracked files and folders in the repository. Each file or folder is described.
-
 ```text
 spp-system/
-├── .gitignore                     # Rules for local files not to include in Git, such as databases, secrets, and caches
-├── LICENSE                        # Project MIT License and terms of use and distribution
-├── README.md                      # Project overview, setup, model, deployment, and file-structure documentation
-├── app.py                         # Flask application: routes, login, database, student records, predictions, reports, and access control
-├── model.py                       # Trains the Random Forest model from CSV and creates performance_model.pkl
-├── performance_model.pkl          # Pre-trained model and feature list; runtime artifact used for predictions
-├── requirements.txt               # Packages required for the Python application and model
-├── static/                        # Folder for static assets served directly to the browser
-│   ├── images/                    # Folder for image assets used on the website
-│   │   └── student_laptop.png     # Student/laptop illustration shown on the home page
-│   └── style.css                  # CSS for page layouts, colors, forms, tables, and responsive design
-└── templates/                     # Flask/Jinja2 HTML templates
-    ├── add_student.html           # Form to add a student or edit existing student academic details
-    ├── admin_login.html           # Login page for the restricted head admin portal
-    ├── analytics.html             # Charts and analytics for performance, attendance, and subject averages
-    ├── base.html                  # Shared layout, navigation, flash messages, and content blocks for all pages
-    ├── dashboard.html             # Summary dashboard, performance charts, and recent students
-    ├── forgot_password.html       # Form to verify username/name and reset the password
-    ├── forgot_username.html       # Page to find a username using the registered full name
-    ├── index.html                 # Public home/landing page and main feature overview
-    ├── login.html                 # Student/university user login form
-    ├── prediction.html            # Student prediction, marks, recommendations, and PDF export
-    ├── register.html              # Form to create a new user account
-    ├── student_detail.html        # Details of a student's performance, subjects, and recommendations
-    └── students.html              # Student list, search/filter, prediction results, and CSV export
+├── app.py                         # Main Flask application: routes, authentication, database, predictions, dashboards, and reports
+├── model.py                       # Trains the Random Forest model and creates performance_model.pkl
+├── performance_model.pkl          # Trained machine-learning model used for student performance predictions
+├── requirements.txt               # Python packages required to run and deploy the project
+├── static/
+│   ├── style.css                  # Shared application styles and responsive page layouts
+│   └── images/student_laptop.png  # Student/laptop illustration displayed on the home page
+├── templates/                     # Jinja2 HTML pages for login, registration, dashboards, students, analytics, and reports
+├── .gitignore                     # Excludes local databases, secrets, virtual environments, and caches
+└── LICENSE                        # MIT license for the project
 ```
 
 Files such as `database.db`, `secret.key`, `student_data.csv`, virtual environments, and Python caches are created or used during local development or model training; they are not tracked project files because they are listed in `.gitignore`. `student_data.csv` is only required as input when retraining the model.
