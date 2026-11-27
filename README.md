@@ -236,7 +236,7 @@ Use synthetic data for every test.
 
 ## Development Context
 
-This project was developed with assistance from GitHub Copilot (AI).
+This project was developed with assistance from an AI assistant.
 
 This project is an academic software and machine-learning demonstration. AI-generated suggestions and implementation details should be reviewed and validated by the project owner and appropriate academic reviewers.
 
